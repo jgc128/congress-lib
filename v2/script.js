@@ -10,8 +10,9 @@ d3.json("lcc-lcsh-1950.json", function(error, graph) {
 	var color = d3.scale.category20();
 
 	var force = d3.layout.force()
+		.linkStrength(0.1)
 		.charge(-80)
-		.linkDistance(100)
+		//.linkDistance(100)
 		.size([width, height]);
 
 	var svg = d3.select("body").append("svg")
