@@ -21,8 +21,8 @@ d3.json("lcc-lcsh-1950.json", function(error, graph) {
 	force
 		.nodes(graph.nodes)
 		.links(graph.links)
-		.linkStrength(function(d) { return d.count.map(5, 40, 0, 1); })
-		.linkDistance(function(d) { return 150 - d.count * 3; })
+		//.linkStrength(function(d) { return d.count.map(0, 40, 0, 1); })
+		.linkDistance(function(d) { return d.type == 'first' ? 200 - d.count * 3 : 50; })
 		.start()
 	;
 
@@ -30,7 +30,7 @@ d3.json("lcc-lcsh-1950.json", function(error, graph) {
 		.data(graph.links)
 		.enter().append("line")
 		.attr("class", "link")
-		.style("stroke-width", function(d) { return Math.sqrt(d.count); })
+		.style("stroke-width", function(d) { return d.count != 0 ? Math.sqrt(d.count) : 1.5; })
 	;
 
 	var node = svg.selectAll(".node")
