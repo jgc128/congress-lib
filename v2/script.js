@@ -1,3 +1,28 @@
+var lcc_dict = {
+'A': 'General Works',
+'B': 'Philosophy, Psychology, Religion',
+'C': 'Auxiliary Sciences of History (General)',
+'D': 'World History (except American History)',
+'E': 'American History',
+'F': 'Local History',
+'G': 'Geography, Anthropology, Recreation',
+'H': 'Social Sciences',
+'J': 'Political Science',
+'K': 'Law',
+'L': 'Education',
+'M': 'Music',
+'N': 'Fine Arts',
+'P': 'Language and Literature',
+'Q': 'Science',
+'R': 'Medicine',
+'S': 'Agriculture',
+'T': 'Technology',
+'U': 'Military Science',
+'V': 'Naval Science',
+'Z': 'Bibliography, Library Science',
+};
+
+
 Number.prototype.map = function ( in_min , in_max , out_min , out_max ) {
   return ( this - in_min ) * ( out_max - out_min ) / ( in_max - in_min ) + out_min;
 }
@@ -50,8 +75,8 @@ d3.json("lcc-lcsh-1950.json", function(error, graph) {
 		.append("text")
 		.attr("class", "title")
 		.attr("text-anchor", "middle")
-		.attr("dy", function(d){ return 5; })
-		.text(function(d) { return d.code; })
+		.attr("dy", function(d){ return 15 + Math.sqrt(d.count); })
+		.text(function(d) { return lcc_dict[d.code]; })
 	;
 	
 	nodeCircle.append("title")
