@@ -39,10 +39,19 @@ d3.json("lcc-lcsh-1950.json", function(error, graph) {
 		.enter().append("circle")
 		.attr("class", "node")
 		.attr("r", function(d) { return Math.sqrt(d.count); })
-		.style("fill", function(d) { return color(d.code); })
+		.style("fill", function(d) { return color(d.code[0]); })
 		.call(force.drag)
 	;
 
+	var text = svg.selectAll(".title")
+		.data(graph.nodes.filter(function(d){ return d.type == "first"; }))
+		.enter().append("text")
+		.attr("class", "title")
+		.attr("text-anchor", "middle")
+		.text(function(d) { return d.code; })
+	;
+	
+	
 	node.append("title")
 		.text(function(d) { return d.code; })
 	;
@@ -59,6 +68,10 @@ d3.json("lcc-lcsh-1950.json", function(error, graph) {
 		node
 			.attr("cx", function(d) { return d.x; })
 			.attr("cy", function(d) { return d.y; })
+		;
+		text
+			.attr("x", function(d) { return d.x; })
+			.attr("y", function(d) { return d.y; })
 		;
 	});
 
