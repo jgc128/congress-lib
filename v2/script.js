@@ -34,28 +34,30 @@ d3.json("lcc-lcsh-1950.json", function(error, graph) {
 		.style("stroke-width", function(d) { return d.count != 0 ? Math.sqrt(d.count) : 1.5; })
 	;
 
-	var node = svg.selectAll(".node")
+	var node = svg.selectAll("g")
 		.data(graph.nodes)
-		.enter().append("circle")
+		.enter().append('g')
+		.call(force.drag)
+	;
+		
+	var nodeCircle = node.append("circle")
 		.attr("class", "node")
 		.attr("r", function(d) { return Math.sqrt(d.count); })
 		.style("fill", function(d) { return color(d.code[0]); })
-		.call(force.drag)
 	;
-
-	var text = svg.selectAll(".title")
-		.data(graph.nodes.filter(function(d){ return d.type == "first"; }))
-		.enter().append("text")
+	var nodeText = node
+		.filter(function(d){ return d.type == "first"; })
+		.append("text")
 		.attr("class", "title")
 		.attr("text-anchor", "middle")
+		.attr("dy", function(d){ return 5; })
 		.text(function(d) { return d.code; })
 	;
 	
-	
-	node.append("title")
+	nodeCircle.append("title")
 		.text(function(d) { return d.code; })
 	;
-
+	
 	force.on("tick", function() {
 		
 		link
@@ -64,14 +66,8 @@ d3.json("lcc-lcsh-1950.json", function(error, graph) {
 			.attr("x2", function(d) { return d.target.x; })
 			.attr("y2", function(d) { return d.target.y; })
 		;
-		
 		node
-			.attr("cx", function(d) { return d.x; })
-			.attr("cy", function(d) { return d.y; })
-		;
-		text
-			.attr("x", function(d) { return d.x; })
-			.attr("y", function(d) { return d.y; })
+			.attr("transform", function(d){return "translate("+d.x+","+d.y+")"})
 		;
 	});
 
