@@ -1,26 +1,35 @@
-Number.prototype.map = function ( in_min , in_max , out_min , out_max ) {
-  return ( this - in_min ) * ( out_max - out_min ) / ( in_max - in_min ) + out_min;
-}
+var colorScale = d3.scale.category20();
+var distanceScaleSecondLevel = d3.scale.linear().domain([0,1]).range([50,100]);
+var distanceScaleTopLevel = d3.scale.linear().domain([0,100]).range([400,200]);
+var linkWidthScale = d3.scale.sqrt();
+var nodeRadiusScale = d3.scale.sqrt();
+
+// Math.max.apply(Math,graphData[1950].links.map(function(o){return o.count;}))
 
 queue(2)
 	.defer(d3.json, "lcc-titles.json")
 	.defer(d3.json, "lcc-lcsh-full.json")
+    // .defer(d3.json("lcc-lcsh-full.json").on("progress", function() {
+    //         console.log(d3.event.loaded);
+    // }).get)
 	.await(ready);
 
 function ready(error, lcc_dict, graphData) {
-	
-	window.graphData = graphData;
-	
-	var width, height;
 
-	var color = d3.scale.category20();
-	var force = d3.layout.force();
-	var svg = d3.select("body").append("svg");
+    d3.select("#loading-indicator").remove();
+
+	window.graphData = graphData;
+
+    var force = d3.layout.force();
+    var svg = d3.select("body").append("svg");
+
+	var width, height;
 
 	var options = {
 		'charge': parseInt(d3.select("#charge").property("value")),
 		'strength': parseFloat(d3.select("#strength").property("value")),
-		'distance': parseInt(d3.select("#distance").property("value")),
+		'distanceMax': parseInt(d3.select("#distance").property("value")),
+        'distanceMin': 200,
 	};
 
 	/*
@@ -28,7 +37,7 @@ function ready(error, lcc_dict, graphData) {
 	d3.select('#year-label').text('Year: ' + d3.select("#year").property("value"));
 	*/
 	var graph = graphData[1950];
-	
+
 	force
 		.nodes(graph.nodes)
 		.links(graph.links)
@@ -36,7 +45,7 @@ function ready(error, lcc_dict, graphData) {
 		.charge(options.charge)
 		.linkStrength(options.strength)
 		//.linkStrength(function(d) { return d.count.map(0, 40, 0, 1); })
-		.linkDistance(function(d) { return d.type == 'first' ? options.distance - (d.count * 4) : Math.random().map(0,1,50,100); })
+		.linkDistance(function(d) { return d.type == 'first' ? distanceScaleTopLevel(d.count) : distanceScaleSecondLevel(Math.random()); })
 		.start()
 	;
 
@@ -44,7 +53,7 @@ function ready(error, lcc_dict, graphData) {
 		.data(graph.links)
 		.enter().append("line")
 		.attr("class", "link")
-		.style("stroke-width", function(d) { return d.count != 0 ? Math.sqrt(d.count) : 1.5; })
+		.style("stroke-width", function(d) { return d.count != 0 ? linkWidthScale(d.count) : 1.5; })
 	;
 
 	var node = svg.selectAll("g")
@@ -52,11 +61,11 @@ function ready(error, lcc_dict, graphData) {
 		.enter().append('g')
 		.call(force.drag)
 	;
-		
+
 	var nodeCircle = node.append("circle")
 		.attr("class", "node")
-		.attr("r", function(d) { return Math.sqrt(d.count); })
-		.style("fill", function(d) { return color(d.code[0]); })
+		.attr("r", function(d) { return nodeRadiusScale(d.count); })
+		.style("fill", function(d) { return colorScale(d.code[0]); })
 	;
 	var nodeText = node
 		.filter(function(d){ return d.type == "first"; })
@@ -66,22 +75,22 @@ function ready(error, lcc_dict, graphData) {
 		.attr("dy", function(d){ return 15 + Math.sqrt(d.count); })
 		.text(function(d) { return lcc_dict[d.code]; })
 	;
-	
+
 	nodeCircle.append("title")
 		.text(function(d) { return d.code + ': ' + lcc_dict[d.code]; })
 	;
-	
+
 	resize();
 	updateCharge(options.charge);
 	updateStrength(options.strength);
-	updateDistance(options.distance);
-	
-	d3.select(window).on("resize", resize);	
+	updateDistance(options.distanceMax);
+
+	d3.select(window).on("resize", resize);
 	d3.select('#charge').on("change", function(){ updateCharge(parseInt(this.value)) });
 	d3.select('#strength').on("change", function(){ updateStrength(parseFloat(this.value)) });
 	d3.select('#distance').on("change", function(){ updateDistance(this.value) });
 	//d3.select('#year').on("change", function(){ updateYear(parseInt(this.value)) });
-	
+
 	node.on('mouseover', function(d) {
 		d3.select(this.childNodes[0]).attr('class', 'node-selected');
 		link.attr('class', function(l) {
@@ -96,10 +105,10 @@ function ready(error, lcc_dict, graphData) {
 	node.on('mouseout', function(d) {
 		d3.select(this.childNodes[0]).attr('class', 'node');
 		link.attr('class', 'link');
-	});	
-		
+	});
+
 	force.on("tick", function() {
-		
+
 		link
 			.attr("x1", function(d) { return d.source.x; })
 			.attr("y1", function(d) { return d.source.y; })
@@ -115,10 +124,10 @@ function ready(error, lcc_dict, graphData) {
 	function resize() {
 		width = window.innerWidth;
 		height = window.innerHeight;
-		
+
 		svg.attr("width", width).attr("height", height);
 		force.size([width, height]).resume();
-	}	
+	}
 	function updateCharge(value)
 	{
 		options.charge = value;
@@ -130,18 +139,19 @@ function ready(error, lcc_dict, graphData) {
 		options.strength = value;
 		d3.select('#strength-label').text('Strength: ' + options.strength);
 		force.linkStrength(options.strength).start()
-	}	
+	}
 	function updateDistance(value)
 	{
-		options.distance = value;
-		d3.select('#distance-label').text('Distance: ' + options.distance);
+		options.distanceMax = value;
+		d3.select('#distance-label').text('Distance: ' + options.distanceMax);
+        distanceScaleTopLevel.range([options.distanceMax, 200]);
 		force.start()
-	}		
+	}
 	/*
 	function updateYear(year)
 	{
 		d3.select('#year-label').text('Year: ' + year);
-		
+
 		if(graphData[year])
 		{
 			force
@@ -151,5 +161,5 @@ function ready(error, lcc_dict, graphData) {
 		}
 
 	}
-	*/	
+	*/
 }
