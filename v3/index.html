@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Library of Congress</title>
+	<style>
+
+		html, body {
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+		}
+	
+		.node {
+		  stroke: #fff;
+		  stroke-width: 1.5px;
+		}
+		.node-selected {
+		  stroke: #000;
+		  stroke-width: 1.5px;
+		}
+		
+		.link {
+		  stroke: #999;
+		  stroke-opacity: .6;
+		}
+		.link-selected {
+		  stroke: #000;
+		  stroke-opacity: 1;
+		}
+		
+		.title {
+			fill: #000000;
+			text-shadow: 2px 2px 0px rgba(255, 255, 255, 1);
+		}
+
+		#control {
+			position: absolute;
+			top: 20px;
+			left: 20px;
+			width: 160px;
+			height: 250px;
+			background-color: #FFFFFF;
+			box-shadow: 0 0 10px 0 rgba(50, 50, 50, 0.75);
+			padding: 10px;
+		}
+		#control input {
+			width: 160px;
+		}
+		
+	</style>
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="http://d3js.org/queue.v1.min.js"></script>
+	<script src="script.js"></script>
+</head>
+<body>
+	<div id="control">
+		<p>
+			<label id="charge-label" for="charge"></label><br/>
+			<input id="charge" type="range" min="-250" max="250" step="10" value="-80"/><br/>
+		</p>
+		<p>
+			<label id="strength-label" for="strength"></label><br/>
+			<input id="strength" type="range" min="0" max="1" step="0.05" value="0.5"/><br/>
+		</p>
+
+		<!--
+		<p>
+			<label id="year-label" for="year"></label><br/>
+			<input id="year" type="range" min="1950" max="2008" step="1" value="1950"/><br/>
+		</p>
+		-->
+		<p>
+			<label id="distance-label" for="distance"></label><br/>
+			<input id="distance" type="range" min="150" max="1000" step="50" value="500"/><br/>
+		</p>
+
+		
+	</div>
+</body>
+</html>
