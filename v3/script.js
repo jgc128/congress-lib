@@ -16,7 +16,10 @@ queue(2)
 
 function ready(error, lcc_dict, graphData) {
 
+    // hide loading indicator and show controls
     d3.select("#loading-indicator").remove();
+    d3.select("#control").style("display","block").transition().delay(1500).duration(1000).style("opacity",1.0);
+
 
 	window.graphData = graphData;
 

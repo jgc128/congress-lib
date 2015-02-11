@@ -37,6 +37,9 @@ html, body {
     background-color: #FFFFFF;
     box-shadow: 0 0 10px 0 rgba(50, 50, 50, 0.75);
     padding: 10px 20px;
+
+    opacity: 0;
+    display: none;
 }
 #control input {
     width: 160px;
