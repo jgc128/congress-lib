@@ -6,6 +6,10 @@ html, body {
     overflow: hidden;
 }
 
+.node-g {
+    z-index: 999;
+}
+
 .node {
   stroke: #fff;
   stroke-width: 1.5px;
