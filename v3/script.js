@@ -57,7 +57,7 @@ function dataLoaded(error, lccDict, graphData) {
 
     // hide loading indicator and show controls
     d3.select("#loading-indicator").remove();
-    d3.select("#control").style("display","block").transition().duration(1000).style("opacity",1.0);
+    d3.selectAll(".box").style("display","block").transition().duration(1000).style("opacity",1.0);
 
     data.graph = graphData;
     data.lccCatNames = lccDict;
@@ -66,6 +66,9 @@ function dataLoaded(error, lccDict, graphData) {
     updateGraph(graph.nodes, graph.links);
 }
 function updateGraph(nodesData, linksData){
+
+    svg.selectAll("line").remove();
+    svg.selectAll("g").remove();
 
     linkElem = svg.selectAll("line")
         .data(linksData)
@@ -108,7 +111,6 @@ function updateGraph(nodesData, linksData){
 
 
     nodeElem.on('mouseover', function(d) {
-        d3.select(this.childNodes[0]).attr('class', 'node-selected');
         linkElem.attr('class', function(l) {
             if (d === l.source || d === l.target)
                 return 'link-selected';
@@ -119,7 +121,6 @@ function updateGraph(nodesData, linksData){
 
     // Set the stroke width back to normal when mouse leaves the node.
     nodeElem.on('mouseout', function(d) {
-        d3.select(this.childNodes[0]).attr('class', 'node');
         linkElem.attr('class', 'link');
     });
 

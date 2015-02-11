@@ -1,10 +1,16 @@
-html, body {
+html, body, input, div, p, span {
     margin: 0;
     padding: 0;
+}
+html, body {
     width: 100%;
     height: 100%;
     overflow: hidden;
 }
+body {
+    font-family: 'Gentium Book Basic', serif;
+}
+
 
 .node-g {
     z-index: 999;
@@ -12,10 +18,6 @@ html, body {
 
 .node {
   stroke: #fff;
-  stroke-width: 1.5px;
-}
-.node-selected {
-  stroke: #000;
   stroke-width: 1.5px;
 }
 
@@ -33,19 +35,27 @@ html, body {
     text-shadow: 2px 2px 0px rgba(255, 255, 255, 1);
 }
 
-#control {
+.box {
     position: absolute;
-    top: 20px;
-    left: 20px;
-    width: 160px;
     background-color: #FFFFFF;
     box-shadow: 0 0 10px 0 rgba(50, 50, 50, 0.75);
-    padding: 10px 20px;
+    padding: 10px;
 
     opacity: 0;
     display: none;
 }
-#control input {
+.box > input {
+    width: 100%;
+    margin: 0;
+    margin-bottom: 10px;
+}
+.box > input:last-child {
+    margin-bottom: 0;
+}
+
+#control {
+    top: 20px;
+    left: 20px;
     width: 160px;
 }
 
@@ -55,4 +65,22 @@ html, body {
     margin: 0;
     margin-left: -20px;
     margin-top: -20px;
+}
+
+#control-year {
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+}
+
+#year-indicator {
+    top: 20px;
+    left: 50%;
+    width: 100px;
+    margin-left: -50px;
+}
+#year-indicator > label {
+    text-align: center;
+    width: 100%;
+    display: block;
 }
