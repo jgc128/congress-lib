@@ -43,24 +43,26 @@ d3.select(window)
     updateDistance(options.distanceMax);
     updateYear(options.year);
 
-    queue(2)
+    queue()
         .defer(d3.json, "lcc-titles.json")
         .defer(d3.json, "lcc-lcsh-full.json")
-        .await(dataLoaded);
+        .awaitAll(dataLoaded);
 })
 .on("resize", resizeGraphArea);
 
 
 
 
-function dataLoaded(error, lccDict, graphData) {
+function dataLoaded(error, loadedData) {
+
+    data.lccCatNames = loadedData[0];
+    data.graph = loadedData[1];
+
 
     // hide loading indicator and show controls
     d3.select("#loading-indicator").remove();
     d3.selectAll(".box").style("display","block").transition().duration(1000).style("opacity",1.0);
 
-    data.graph = graphData;
-    data.lccCatNames = lccDict;
 
     var graph = data.graph[options.year];
     updateGraph(graph.nodes, graph.links);
