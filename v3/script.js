@@ -1,6 +1,6 @@
 var colorScale = d3.scale.category20();
 var distanceScaleSecondLevel = d3.scale.linear().domain([0,1]).range([50,100]);
-var distanceScaleTopLevel = d3.scale.linear().domain([0,1]).range([400,200]);
+var distanceScaleTopLevel = d3.scale.pow().exponent(0.3).range([200,400]);//d3.scale.linear().domain([0,1]).range([400,200]);
 var linkWidthScale = d3.scale.pow().exponent(0.3).domain([0,1]).range([1.5,10]); //d3.scale.sqrt();
 var nodeRadiusScale = d3.scale.sqrt();
 
@@ -85,7 +85,7 @@ function updateGraph(nodesData, linksData){
     linkElem.enter()
         .append("line")
         .attr("class", "link")
-        .style("stroke-width", function(d) { var r = d.count != 0 ? linkWidthScale(d.count) : 1.5;/* console.log(r);*/ return r; })
+        .style("stroke-width", function(d) { return r = d.count != 0 ? linkWidthScale(d.count) : 1.5; })
     ;
     linkElem.exit().remove();
 
