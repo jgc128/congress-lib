@@ -1,7 +1,7 @@
 var colorScale = d3.scale.category20();
 var distanceScaleSecondLevel = d3.scale.linear().domain([0,1]).range([50,100]);
-var distanceScaleTopLevel = d3.scale.linear().domain([0,100]).range([400,200]);
-var linkWidthScale = d3.scale.sqrt();
+var distanceScaleTopLevel = d3.scale.linear().domain([0,1]).range([400,200]);
+var linkWidthScale = d3.scale.pow().exponent(0.3).domain([0,1]).range([1.5,10]); //d3.scale.sqrt();
 var nodeRadiusScale = d3.scale.sqrt();
 
 var forceStarted = false;
@@ -29,23 +29,28 @@ d3.select(window)
         'distanceMin': 200,
 
         'year': parseInt(d3.select("#year").property("value")),
+        'jaccard': parseFloat(d3.select("#jaccard").property("value")),
     };
 
 
     d3.select('#charge').on("change", function(){ updateCharge(parseInt(this.value)) });
     d3.select('#strength').on("change", function(){ updateStrength(parseFloat(this.value)) });
     d3.select('#distance').on("change", function(){ updateDistance(this.value) });
+
     d3.select('#year').on("change", function(){ updateYear(parseInt(this.value)) });
+    d3.select('#jaccard').on("change", function(){ updateJaccard(parseFloat(this.value)) });
 
     resizeGraphArea();
     updateCharge(options.charge);
     updateStrength(options.strength);
     updateDistance(options.distanceMax);
+
     updateYear(options.year);
+    updateJaccard(options.jaccard);
 
     queue()
         .defer(d3.json, "lcc-titles.json")
-        .defer(d3.json, "lcc-lcsh-full.json")
+        .defer(d3.json, "lcc-lcsh-full-jaccard.json")
         .awaitAll(dataLoaded);
 })
 .on("resize", resizeGraphArea);
@@ -73,14 +78,16 @@ function updateGraph(nodesData, linksData){
     svg.selectAll("g").remove();
 
     linkElem = svg.selectAll("line")
-        .data(linksData)
+        .data(
+            linksData.filter(function(d) { return d.count >= options.jaccard || d.type == "second"; })
+        )
     ;
 
 
     linkElem.enter()
         .append("line")
         .attr("class", "link")
-        .style("stroke-width", function(d) { return d.count != 0 ? linkWidthScale(d.count) : 1.5; })
+        .style("stroke-width", function(d) { var r = d.count != 0 ? linkWidthScale(d.count) : 1.5;/* console.log(r);*/ return r; })
     ;
     linkElem.exit().remove();
 
@@ -194,5 +201,16 @@ function updateYear(year)
         var graph = data.graph[year];
         updateGraph(graph.nodes, graph.links);
 
+    }
+}
+function updateJaccard(value)
+{
+    options.jaccard = value;
+    d3.select('#jaccard-label').text('Jaccard: ' + value);
+
+    if(forceStarted)
+    {
+        var graph = data.graph[options.year];
+        updateGraph(graph.nodes, graph.links);
     }
 }
