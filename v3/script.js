@@ -70,7 +70,7 @@ function dataLoaded(error, loadedData) {
 
 
     var graph = data.graph[options.year];
-    updateGraph(graph.nodes, graph.links);
+    updateGraph(graph.nodes, graph.links.filter(function(d) { return d.count >= options.jaccard || d.type == "second"; }));
 }
 function updateGraph(nodesData, linksData){
 
@@ -78,9 +78,7 @@ function updateGraph(nodesData, linksData){
     svg.selectAll("g").remove();
 
     linkElem = svg.selectAll("line")
-        .data(
-            linksData.filter(function(d) { return d.count >= options.jaccard || d.type == "second"; })
-        )
+        .data(linksData)
     ;
 
 
@@ -211,6 +209,6 @@ function updateJaccard(value)
     if(forceStarted)
     {
         var graph = data.graph[options.year];
-        updateGraph(graph.nodes, graph.links);
+        updateGraph(graph.nodes, graph.links.filter(function(d) { return d.count >= options.jaccard || d.type == "second"; }));
     }
 }
