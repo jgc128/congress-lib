@@ -44,19 +44,19 @@ body {
     opacity: 0;
     display: none;
 }
-.box > input {
+.box > input, .box > select {
     width: 100%;
     margin: 0;
     margin-bottom: 10px;
 }
-.box > input:last-child {
+.box > input:last-child, .box > select:last-child {
     margin-bottom: 0;
 }
 
 #control {
     top: 20px;
     left: 20px;
-    width: 160px;
+    width: 210px;
 }
 
 #loading-indicator {

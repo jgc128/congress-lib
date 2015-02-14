@@ -1,8 +1,11 @@
+var datasets = ["lcc-lcsh-full-jaccard.json", "lcc-lcsh-full-jaccard-acc.json", "bcl_open.01.json"];
+
+
 var colorScale = d3.scale.category20();
 var distanceScaleSecondLevel = d3.scale.linear().domain([0,1]).range([50,100]);
-var distanceScaleTopLevel = d3.scale.pow().exponent(0.3).range([200,400]);//d3.scale.linear().domain([0,1]).range([400,200]);
-var linkWidthScale = d3.scale.pow().exponent(0.3).domain([0,1]).range([1.5,10]); //d3.scale.sqrt();
-var nodeRadiusScale = d3.scale.sqrt();
+var distanceScaleTopLevel = d3.scale.pow().exponent(0.5).domain([0,1]).range([400, 200]);//d3.scale.linear().domain([0,1]).range([400,200]);
+var linkWidthScale = d3.scale.pow().exponent(0.5).domain([0,1]).range([1.5,10]); //d3.scale.sqrt();
+var nodeRadiusScale = d3.scale.sqrt().domain([1,65000]).range([3,80]); //d3.scale.sqrt();
 
 var forceStarted = false;
 
@@ -30,7 +33,22 @@ d3.select(window)
 
         'year': parseInt(d3.select("#year").property("value")),
         'jaccard': parseFloat(d3.select("#jaccard").property("value")),
+
+        'datasetIndex': 0,
     };
+
+    // create dataset select control
+    var selectControl = d3.select('#control')
+        .append('select')
+        .attr('class','select')
+    ;
+
+    var optionsControl = selectControl
+        .selectAll('option')
+        .data(datasets).enter()
+        .append('option')
+        .text(function (d) { console.log(d); return d; });
+
 
 
     d3.select('#charge').on("change", function(){ updateCharge(parseInt(this.value)) });
@@ -40,6 +58,9 @@ d3.select(window)
     d3.select('#year').on("change", function(){ updateYear(parseInt(this.value)) });
     d3.select('#jaccard').on("change", function(){ updateJaccard(parseFloat(this.value)) });
 
+    selectControl.on('change', function(){ updateDataset(this.value); });
+
+
     resizeGraphArea();
     updateCharge(options.charge);
     updateStrength(options.strength);
@@ -48,10 +69,10 @@ d3.select(window)
     updateYear(options.year);
     updateJaccard(options.jaccard);
 
-    queue()
-        .defer(d3.json, "lcc-titles.json")
-        .defer(d3.json, "lcc-lcsh-full-jaccard.json")
-        .awaitAll(dataLoaded);
+    // load data
+    var loadQueue = queue().defer(d3.json, "lcc-titles.json");
+    datasets.forEach(function(t) { loadQueue.defer(d3.json, t); });
+    loadQueue.awaitAll(dataLoaded);
 })
 .on("resize", resizeGraphArea);
 
@@ -61,15 +82,14 @@ d3.select(window)
 function dataLoaded(error, loadedData) {
 
     data.lccCatNames = loadedData[0];
-    data.graph = loadedData[1];
-
+    data.datasets = loadedData.slice(1);
 
     // hide loading indicator and show controls
     d3.select("#loading-indicator").remove();
     d3.selectAll(".box").style("display","block").transition().duration(1000).style("opacity",1.0);
 
 
-    var graph = data.graph[options.year];
+    var graph = data.datasets[options.datasetIndex][options.year];
     updateGraph(graph.nodes, graph.links.filter(function(d) { return d.count >= options.jaccard || d.type == "second"; }));
 }
 function updateGraph(nodesData, linksData){
@@ -101,7 +121,11 @@ function updateGraph(nodesData, linksData){
 
     var nodeCircle = nodeEnter.append("circle")
         .attr("class", "node")
-        .attr("r", function(d) { return Math.max(nodeRadiusScale(d.count), 3); })
+        .attr("r", function(d) {
+            var rad = nodeRadiusScale(d.count);
+
+            return Math.max(rad, 3);
+        })
         .style("fill", function(d) { return colorScale(d.code[0]); })
         .append("title")
             .text(function(d) { return d.code + ': ' + data.lccCatNames[d.code]; })
@@ -111,7 +135,7 @@ function updateGraph(nodesData, linksData){
         .append("text")
         .attr("class", "title")
         .attr("text-anchor", "middle")
-        .attr("dy", function(d){ return 15 + Math.sqrt(d.count); })
+        .attr("dy", function(d){ return 15 + nodeRadiusScale(d.count); })
         .text(function(d) { return data.lccCatNames[d.code]; })
     ;
     nodeElem.exit().remove();
@@ -148,7 +172,11 @@ function updateGraph(nodesData, linksData){
     force
         .nodes(nodesData)
         .links(linksData)
-        .linkDistance(function(d) { return d.type == 'first' ? distanceScaleTopLevel(d.count) : distanceScaleSecondLevel(Math.random()); })
+        .linkDistance(function(d) {
+            var dist = d.type == 'first' ? distanceScaleTopLevel(d.count) : distanceScaleSecondLevel(Math.random());
+
+            return dist;
+        })
         .start()
     ;
     forceStarted = true;
@@ -208,7 +236,19 @@ function updateJaccard(value)
 
     if(forceStarted)
     {
-        var graph = data.graph[options.year];
+        var graph = data.datasets[options.datasetIndex][options.year];
+        updateGraph(graph.nodes, graph.links.filter(function(d) { return d.count >= options.jaccard || d.type == "second"; }));
+    }
+}
+
+function updateDataset(datasetName)
+{
+    var datasetIndex = datasets.indexOf(datasetName);
+    options.datasetIndex = datasetIndex;
+
+    if(forceStarted)
+    {
+        var graph = data.datasets[options.datasetIndex][options.year];
         updateGraph(graph.nodes, graph.links.filter(function(d) { return d.count >= options.jaccard || d.type == "second"; }));
     }
 }
