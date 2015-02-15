@@ -222,9 +222,9 @@ function updateYear(year)
     options.year = year;
     d3.select('#year-label').text('Year: ' + year);
 
-    if(forceStarted && data.graph[year])
+    if(forceStarted && data.datasets && data.datasets[options.datasetIndex][options.year])
     {
-        var graph = data.graph[year];
+        var graph = data.datasets[options.datasetIndex][options.year];
         updateGraph(graph.nodes, graph.links);
 
     }
@@ -246,7 +246,7 @@ function updateDataset(datasetName)
     var datasetIndex = datasets.indexOf(datasetName);
     options.datasetIndex = datasetIndex;
 
-    if(forceStarted)
+    if(forceStarted && data.datasets && data.datasets[options.datasetIndex][options.year])
     {
         var graph = data.datasets[options.datasetIndex][options.year];
         updateGraph(graph.nodes, graph.links.filter(function(d) { return d.count >= options.jaccard || d.type == "second"; }));
