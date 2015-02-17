@@ -30,6 +30,7 @@ d3.select(window)
         'strength': parseFloat(d3.select("#strength").property("value")),
         'distanceMax': parseInt(d3.select("#distance").property("value")),
         'distanceMin': 200,
+        'size': parseInt(d3.select("#size").property("value")),
 
         'year': parseInt(d3.select("#year").property("value")),
         'jaccard': parseFloat(d3.select("#jaccard").property("value")),
@@ -54,6 +55,7 @@ d3.select(window)
     d3.select('#charge').on("change", function(){ updateCharge(parseInt(this.value)) });
     d3.select('#strength').on("change", function(){ updateStrength(parseFloat(this.value)) });
     d3.select('#distance').on("change", function(){ updateDistance(this.value) });
+    d3.select('#size').on("change", function(){ updateSize(this.value) });
 
     d3.select('#year').on("change", function(){ updateYear(parseInt(this.value)) });
     d3.select('#jaccard').on("change", function(){ updateJaccard(parseFloat(this.value)) });
@@ -65,6 +67,7 @@ d3.select(window)
     updateCharge(options.charge);
     updateStrength(options.strength);
     updateDistance(options.distanceMax);
+    updateSize(options.size);
 
     updateYear(options.year);
     updateJaccard(options.jaccard);
@@ -98,7 +101,10 @@ function updateGraph(nodesData, linksData){
     svg.selectAll("g").remove();
 
     linkElem = svg.selectAll("line")
-        .data(linksData)
+        .data(
+            linksData
+            .filter(function(d) { return d.count >= options.jaccard || d.type == "second"; })
+        )
     ;
 
 
@@ -216,6 +222,19 @@ function updateDistance(value)
     if(forceStarted)
         force.start()
 }
+function updateSize(value)
+{
+    options.size = value;
+    d3.select('#size-label').text('Size: ' + (parseInt(d3.select('#size').attr('max')) - options.size));
+
+    nodeRadiusScale.domain([1, options.size * options.size]);
+
+    if(forceStarted)
+    {
+        var graph = data.datasets[options.datasetIndex][options.year];
+        updateGraph(graph.nodes, graph.links);
+    }
+}
 
 function updateYear(year)
 {
@@ -226,7 +245,6 @@ function updateYear(year)
     {
         var graph = data.datasets[options.datasetIndex][options.year];
         updateGraph(graph.nodes, graph.links);
-
     }
 }
 function updateJaccard(value)
@@ -237,7 +255,7 @@ function updateJaccard(value)
     if(forceStarted)
     {
         var graph = data.datasets[options.datasetIndex][options.year];
-        updateGraph(graph.nodes, graph.links.filter(function(d) { return d.count >= options.jaccard || d.type == "second"; }));
+        updateGraph(graph.nodes, graph.links);
     }
 }
 
@@ -249,6 +267,6 @@ function updateDataset(datasetName)
     if(forceStarted && data.datasets && data.datasets[options.datasetIndex][options.year])
     {
         var graph = data.datasets[options.datasetIndex][options.year];
-        updateGraph(graph.nodes, graph.links.filter(function(d) { return d.count >= options.jaccard || d.type == "second"; }));
+        updateGraph(graph.nodes, graph.links);
     }
 }
