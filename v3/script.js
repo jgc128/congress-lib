@@ -1,11 +1,18 @@
-var datasets = ["lcc-lcsh-full-jaccard.json", "lcc-lcsh-full-jaccard-acc.json", "bcl_open.01.json"];
+var datasets = ["lcc-lcsh-full-jaccard.json", "lcc-lcsh-full-jaccard-acc.json", "lcc-lcsh-full.json", "bcl_open.01.json"];
 
+var distanceScaleTopLevelJaccard = d3.scale.pow().exponent(0.5).domain([0,1]).range([400, 200]);
+var distanceScaleTopLevelUniqCount  = d3.scale.linear().domain([0,100]).range([400,200]);
+var linkWidthScaleJaccard = d3.scale.pow().exponent(0.5).domain([0,1]).range([1.5,10]);
+var linkWidthScaleUniqCount = d3.scale.sqrt();
+
+var datasetsUniq = ["lcc-lcsh-full.json"];
 
 var colorScale = d3.scale.category20();
+var nodeRadiusScale = d3.scale.sqrt().domain([1,65000]).range([3,80]); //d3.scale.sqrt();
+
 var distanceScaleSecondLevel = d3.scale.linear().domain([0,1]).range([50,100]);
 var distanceScaleTopLevel = d3.scale.pow().exponent(0.5).domain([0,1]).range([400, 200]);//d3.scale.linear().domain([0,1]).range([400,200]);
 var linkWidthScale = d3.scale.pow().exponent(0.5).domain([0,1]).range([1.5,10]); //d3.scale.sqrt();
-var nodeRadiusScale = d3.scale.sqrt().domain([1,65000]).range([3,80]); //d3.scale.sqrt();
 
 var forceStarted = false;
 
@@ -34,7 +41,6 @@ d3.select(window)
 
         'year': parseInt(d3.select("#year").property("value")),
         'jaccard': parseFloat(d3.select("#jaccard").property("value")),
-
         'datasetIndex': 0,
     };
 
@@ -263,6 +269,14 @@ function updateDataset(datasetName)
 {
     var datasetIndex = datasets.indexOf(datasetName);
     options.datasetIndex = datasetIndex;
+
+    if (datasetsUniq.indexOf(datasetName) != -1) {
+        distanceScaleTopLevel = distanceScaleTopLevelUniqCount;
+        linkWidthScale = linkWidthScaleUniqCount;
+    } else {
+        distanceScaleTopLevel = distanceScaleTopLevelJaccard;
+        linkWidthScale = linkWidthScaleJaccard;
+    }
 
     if(forceStarted && data.datasets && data.datasets[options.datasetIndex][options.year])
     {
