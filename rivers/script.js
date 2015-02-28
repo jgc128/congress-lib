@@ -1,3 +1,6 @@
+//   http://stackoverflow.com/questions/14127065/d3-streamgraph-layer-fade-function
+
+
 var datasets = ["lcc-rivers.json"];
 
 
@@ -6,6 +9,12 @@ var options;
 // var width, height;
 var width = 960,
     height = 500;
+
+var padding = 50;
+var leftPadding = 300;
+
+var startYear = 1900;
+var endYear = 1950;
 
 var n, // number of layers
     m // number of samples per layer
@@ -64,8 +73,8 @@ function dataLoaded(error, loadedData) {
     drawGraph(data.graphData);
 }
 function resizeGraphArea() {
-    width = window.innerWidth - 400;
-    height = window.innerHeight - 400;
+    width = window.innerWidth - 200;
+    height = window.innerHeight - 200;
 
     svg.attr("width", width).attr("height", height);
 }
@@ -73,9 +82,6 @@ function transformData(data) {
 
     var startChar = "A".charCodeAt(0);
     var endChar = "Z".charCodeAt(0);
-
-    var startYear = 1900;
-    var endYear = 1950;
 
     var result = [];
 
@@ -106,15 +112,15 @@ function drawGraph(graphData) {
         // .offset("zero")
         .offset("expand")
     ;
-    var stackData = stack(graphData);
+    window.stackData = stack(graphData);
 
     var x = d3.scale.linear()
         .domain([0, m - 1])
-        .range([0, width]);
+        .range([leftPadding, width - padding]);
 
     var y = d3.scale.linear()
         .domain([0, d3.max(stackData, function(layer) { return d3.max(layer, function(d) { return d.y0 + d.y; }); })])
-        .range([height, 0]);
+        .range([height - padding, padding]);
 
     var color = d3.scale.category20();//d3.scale.linear().range(["#aad", "#556"]);
 
@@ -146,16 +152,43 @@ function drawGraph(graphData) {
     });
 
 
+    // Axes
     var xAxis = d3.svg.axis()
-                .scale(x)
-                .orient("top")
-                .ticks(d3.time.years);
-    svg.append("g")
-          .attr("class", "x axis")
-          .attr("transform", "translate(0," + (-100).toString() + ")")
-          .call(xAxis);
+        .scale(
+            d3.scale.linear()
+            .domain([startYear, endYear])
+            .range([leftPadding, width - padding])
+        )
+        .tickFormat(d3.format('d'))
+        // .ticks(d3.time.year, 25)
+    ;
+    var xAxisContainer = svg.append("g")
+        .attr('class', 'axis')
+        .attr("transform", "translate(0," + (height - padding) + ")")
+        .call(xAxis)
+    ;
 
-        //   http://stackoverflow.com/questions/14127065/d3-streamgraph-layer-fade-function
+
+    var yAxisValues = stackData.filter(function(a) {return a[0].y > 0.05 }).map(function(a){ return a[0].y0 + a[0].y / 2 });
+    var yAxisValuesText = stackData.filter(function(a) {return a[0].y > 0.05 }).map(function(a) {return data.lccCatNames[a[0].lcc] });
+    var yAxisValuesTextScale = d3.scale.ordinal()
+        .domain(yAxisValues)
+        .range(yAxisValuesText)
+    ;
+
+    var yAxis = d3.svg.axis()
+    	.scale(y)
+        .tickValues(yAxisValues)
+        .tickFormat(function(d) { return yAxisValuesTextScale(d) })
+    	.orient("left")
+    ;
+    var yAxisContainer = svg.append("g")
+        .attr('class', 'axis')
+        .attr("transform", "translate(" + leftPadding + ",0)")
+        .call(yAxis)
+    ;
+
+
 }
 
 

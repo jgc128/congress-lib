@@ -12,49 +12,8 @@ body {
 }
 
 svg {
-    margin-top: 200px;
-    margin-left: 200px;
-}
-
-.node-g {
-    z-index: 999;
-}
-
-.node {
-  stroke: #fff;
-  stroke-width: 1.5px;
-}
-
-.link {
-  stroke: #999;
-  stroke-opacity: .6;
-}
-.link-selected {
-  stroke: #000;
-  stroke-opacity: 1;
-}
-
-.title {
-    fill: #000000;
-    text-shadow: 2px 2px 0px rgba(255, 255, 255, 1);
-}
-
-.box {
-    position: absolute;
-    background-color: #FFFFFF;
-    box-shadow: 0 0 10px 0 rgba(50, 50, 50, 0.75);
-    padding: 10px;
-
-    opacity: 0;
-    display: none;
-}
-.box > input, .box > select {
-    width: 100%;
-    margin: 0;
-    margin-bottom: 10px;
-}
-.box > input:last-child, .box > select:last-child {
-    margin-bottom: 0;
+    margin-top: 100px;
+    margin-left: 100px;
 }
 
 .stream, .stream-selected, .stream-unselected {
@@ -73,6 +32,31 @@ svg {
 .stream-unselected {
     stroke-width: 0px;
     opacity: 0.5;
+}
+
+.axis > path {
+    fill: none;
+    stroke: black;
+    stroke-width: 3px;
+}
+
+
+.box {
+    position: absolute;
+    background-color: #FFFFFF;
+    box-shadow: 0 0 10px 0 rgba(50, 50, 50, 0.75);
+    padding: 10px;
+
+    opacity: 0;
+    display: none;
+}
+.box > input, .box > select {
+    width: 100%;
+    margin: 0;
+    margin-bottom: 10px;
+}
+.box > input:last-child, .box > select:last-child {
+    margin-bottom: 0;
 }
 
 
