@@ -1,7 +1,7 @@
 //   http://stackoverflow.com/questions/14127065/d3-streamgraph-layer-fade-function
 
 
-var datasets = ["lcc-rivers.json"];
+var datasets = ["congress-lib-lcc-year.csv"];
 
 
 var options;
@@ -13,7 +13,7 @@ var width = 960,
 var padding = 50;
 var leftPadding = 300;
 
-var startYear = 1900;
+var startYear = 1850;
 var endYear = 1950;
 
 var n, // number of layers
@@ -48,8 +48,8 @@ d3.select(window)
     resizeGraphArea();
 
     // load data
-    var loadQueue = queue().defer(d3.json, "lcc-titles.json");
-    datasets.forEach(function(t) { loadQueue.defer(d3.json, t); });
+    var loadQueue = queue().defer(d3.json, "lc_class.json");
+    datasets.forEach(function(t) { loadQueue.defer(d3.csv, t); });
     loadQueue.awaitAll(dataLoaded);
 })
 .on("resize", resizeGraphArea)
@@ -73,38 +73,91 @@ function dataLoaded(error, loadedData) {
     drawGraph(data.graphData);
 }
 function resizeGraphArea() {
-    width = window.innerWidth - 200;
-    height = window.innerHeight - 200;
+    width = window.innerWidth;
+    height = window.innerHeight;
 
     svg.attr("width", width).attr("height", height);
 }
-function transformData(data) {
+
+function transformData(rawData) {
+    // var qwe = d3.nest()
+    //     .key(function(d) { return d.lcc[0] })
+    //     .key(function(d) { return d.year })
+    //     .rollup(function(leaves) { return leaves.length })
+    //     .entries(data);
+
+    // d3.nest().key(function(d) { return d.lcc[0] }).key(function(d) { return d.lcc[1] }).entries(data.datasets[0])
+
+    data.firstLevel = {};
+    data.secondLevel = {};
+
+    // set array of counts
+
+    for(var i = 0; i < rawData.length; i++) {
+        var record = rawData[i];
+
+        var cls = record.lcc[0];
+        var subclass = cls;
+
+        if (record.lcc.length > 1 && isNaN(parseInt(record.lcc[1])))
+            var subclass = record.lcc.substring(0,2);
+
+        var year = parseInt(record.year);
+
+        if(!(cls in data.firstLevel)) {
+            data.firstLevel[cls] = {};
+            data.secondLevel[cls] = {};
+        }
+        if(!(subclass in data.secondLevel[cls])) {
+            data.secondLevel[cls][subclass] = {};
+        }
+        if(!(year in data.firstLevel[cls])) {
+            data.firstLevel[cls][year] = 0;
+            data.secondLevel[cls][subclass][year] = 0;
+        }
+
+        data.firstLevel[cls][year] += 1;
+        data.secondLevel[cls][subclass][year] += 1;
+    }
+
+
+    var result = [];
 
     var startChar = "A".charCodeAt(0);
     var endChar = "Z".charCodeAt(0);
 
-    var result = [];
-
     n = endChar - startChar + 1;
     m = endYear - startYear + 1;
 
+
+    // first level
     for(var i = 0; i <= endChar - startChar; i++) {
         var lcc = String.fromCharCode(startChar + i);
+        if(lcc == 'I' || lcc == 'O' || lcc == 'W' || lcc == 'X' || lcc == 'Y') // There are no I, O, W, X and Y classes
+            continue;
+
         var lccData = [];
         for(var j = 0; j <= endYear - startYear; j++) {
             var c = 0;
-            if(data[startYear + j] && data[startYear + j][lcc])
-                c = data[startYear + j][lcc];
+            if(data.firstLevel[lcc] && data.firstLevel[lcc][startYear + j])
+                c = data.firstLevel[lcc][startYear + j];
 
             lccData.push({'x': j, 'y': c, 'lcc': lcc, 'lcc_idx': i});
         }
         result.push(lccData);
     }
 
+    // // set missing in the second level
+    // for(l1 in data.secondLevel) {
+    //     for(l2 in data.secondLevel[l1]) {
+    //         for()
+    //     }
+    // }
+    //
 
     return result;
-
 }
+
 
 function drawGraph(graphData) {
 
@@ -138,7 +191,7 @@ function drawGraph(graphData) {
         .style("fill", function(d) { return color(d[0]['lcc_idx']); })
     ;
     streams
-        .append("title").text(function(d) { return data.lccCatNames[d[0]['lcc']]; })
+        .append("title").text(function(d) { return data.lccCatNames[d[0]['lcc']].title; })
 
 
     streams.on('mouseover', function(d) {
@@ -170,7 +223,7 @@ function drawGraph(graphData) {
 
 
     var yAxisValues = stackData.filter(function(a) {return a[0].y > 0.05 }).map(function(a){ return a[0].y0 + a[0].y / 2 });
-    var yAxisValuesText = stackData.filter(function(a) {return a[0].y > 0.05 }).map(function(a) {return data.lccCatNames[a[0].lcc] });
+    var yAxisValuesText = stackData.filter(function(a) {return a[0].y > 0.05 }).map(function(a) { return data.lccCatNames[a[0].lcc].title });
     var yAxisValuesTextScale = d3.scale.ordinal()
         .domain(yAxisValues)
         .range(yAxisValuesText)
