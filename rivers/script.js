@@ -16,9 +16,13 @@ var leftPadding = 300;
 var startYear = 1850;
 var endYear = 1950;
 
-var n, // number of layers
-    m // number of samples per layer
-;
+
+var startChar = "A".charCodeAt(0);
+var endChar = "Z".charCodeAt(0);
+
+var n = endChar - startChar + 1; // number of layers
+var m = endYear - startYear + 1; // number of samples per layer
+
 
 var data = {};
 
@@ -80,118 +84,115 @@ function resizeGraphArea() {
 }
 
 function transformData(rawData) {
-    // var qwe = d3.nest()
-    //     .key(function(d) { return d.lcc[0] })
-    //     .key(function(d) { return d.year })
-    //     .rollup(function(leaves) { return leaves.length })
-    //     .entries(data);
+    // group by category
+    var catGroups = d3.nest()
+        .key(function(d) { return d.lcc[0] })
+        .key(function(d) { return d.year })
+        .rollup(function(leaves) { return leaves.length })
+        .entries(rawData)
+    ;
 
-    // d3.nest().key(function(d) { return d.lcc[0] }).key(function(d) { return d.lcc[1] }).entries(data.datasets[0])
 
-    data.firstLevel = {};
-    data.secondLevel = {};
+    return transformLccCountToStreamData(catGroups);
+}
 
-    // set array of counts
+function transformLccCountToStreamData(lccCountData) {
+    // filter data
+    var transformedData =
+        lccCountData
+        .filter(function(d) {
+            var c = d.key.charCodeAt(0);
+            return c >= startChar && c <= endChar;
+        })
+        .filter(function(d) { // There are no I, O, W, X and Y classes
+            return !(d.key == 'I' || d.key == 'O' || d.key == 'W' || d.key == 'X' || d.key == 'Y')
+        })
+        .map(function(e){
+            return {
+                'lcc': e.key,
+                'values': e.values.map(function(e2) {
+                    return {
+                        'year': parseInt(e2.key),
+                        'count': e2.values
+                    }
+                }).filter(function(e2) {
+                    return e2.year >= startYear && e2.year <= endYear;
+                }),
+            };
+        })
+    ;
 
-    for(var i = 0; i < rawData.length; i++) {
-        var record = rawData[i];
+    // set missing
+    transformedData.forEach(function(e) {
+        if (e.values.length != endYear - startYear + 1) {
 
-        var cls = record.lcc[0];
-        var subclass = cls;
+            var keys = d3.set(e.values.map(function(e2) { return e2.year }));
 
-        if (record.lcc.length > 1 && isNaN(parseInt(record.lcc[1])))
-            var subclass = record.lcc.substring(0,2);
-
-        var year = parseInt(record.year);
-
-        if(!(cls in data.firstLevel)) {
-            data.firstLevel[cls] = {};
-            data.secondLevel[cls] = {};
+            for(var i = startYear; i <= endYear; i++) {
+                if (!keys.has(i)) {
+                    e.values.push({'year': i, 'count': 0});
+                }
+            }
         }
-        if(!(subclass in data.secondLevel[cls])) {
-            data.secondLevel[cls][subclass] = {};
-        }
-        if(!(year in data.firstLevel[cls])) {
-            data.firstLevel[cls][year] = 0;
-            data.secondLevel[cls][subclass][year] = 0;
-        }
-
-        data.firstLevel[cls][year] += 1;
-        data.secondLevel[cls][subclass][year] += 1;
-    }
+    });
 
 
-    var result = [];
-
-    var startChar = "A".charCodeAt(0);
-    var endChar = "Z".charCodeAt(0);
-
-    n = endChar - startChar + 1;
-    m = endYear - startYear + 1;
-
-
-    // first level
-    for(var i = 0; i <= endChar - startChar; i++) {
-        var lcc = String.fromCharCode(startChar + i);
-        if(lcc == 'I' || lcc == 'O' || lcc == 'W' || lcc == 'X' || lcc == 'Y') // There are no I, O, W, X and Y classes
-            continue;
-
-        var lccData = [];
-        for(var j = 0; j <= endYear - startYear; j++) {
-            var c = 0;
-            if(data.firstLevel[lcc] && data.firstLevel[lcc][startYear + j])
-                c = data.firstLevel[lcc][startYear + j];
-
-            lccData.push({'x': j, 'y': c, 'lcc': lcc, 'lcc_idx': i});
-        }
-        result.push(lccData);
-    }
-
-    // // set missing in the second level
-    // for(l1 in data.secondLevel) {
-    //     for(l2 in data.secondLevel[l1]) {
-    //         for()
-    //     }
-    // }
-    //
-
-    return result;
+    return transformedData;
 }
 
 
 function drawGraph(graphData) {
 
+    var color = d3.scale.category20(); //d3.scale.linear().range(["#aad", "#556"]);
+
     var stack = d3.layout.stack()
         // .offset("zero")
         .offset("expand")
+        .values(function(d) {
+            return d.values;
+        })
+        .x(function(d) {
+            return d.year;
+        })
+        .y(function(d) {
+            return d.count;
+        });
     ;
-    window.stackData = stack(graphData);
+    var stackData = stack(graphData);
 
     var x = d3.scale.linear()
-        .domain([0, m - 1])
-        .range([leftPadding, width - padding]);
-
+        .domain([startYear, endYear])
+        .range([leftPadding, width - padding])
+    ;
     var y = d3.scale.linear()
-        .domain([0, d3.max(stackData, function(layer) { return d3.max(layer, function(d) { return d.y0 + d.y; }); })])
-        .range([height - padding, padding]);
-
-    var color = d3.scale.category20();//d3.scale.linear().range(["#aad", "#556"]);
+        .domain([0, d3.max(stackData, function(layer) { return d3.max(layer.values, function(d) { return d.y0 + d.y; }); })])
+        .range([padding, height - padding])
+    ;
 
     var area = d3.svg.area()
-        .x(function(d) { return x(d.x); })
-        .y0(function(d) { return y(d.y0); })
-        .y1(function(d) { return y(d.y0 + d.y); });
+        .x(function(d) {
+            return x(d.year);
+        })
+        .y0(function(d) {
+            return y(d.y0);
+        })
+        .y1(function(d) {
+            return y(d.y0 + d.y);
+        })
+    ;
 
 
     var streams = svg.selectAll("path")
         .data(stackData)
         .enter().append("path")
         .attr('class', 'stream')
-        .attr("d", area)
-        .style("fill", function(d) { return color(d[0]['lcc_idx']); })
+        .attr("d", function(d) {
+            return area(d.values);
+        })
+        .style("fill", function(d) { return color(d.lcc); })
     ;
     streams
-        .append("title").text(function(d) { return data.lccCatNames[d[0]['lcc']].title; })
+        .append("title").text(function(d) { return data.lccCatNames[d.lcc].title; })
 
 
     streams.on('mouseover', function(d) {
@@ -222,8 +223,8 @@ function drawGraph(graphData) {
     ;
 
 
-    var yAxisValues = stackData.filter(function(a) {return a[0].y > 0.05 }).map(function(a){ return a[0].y0 + a[0].y / 2 });
-    var yAxisValuesText = stackData.filter(function(a) {return a[0].y > 0.05 }).map(function(a) { return data.lccCatNames[a[0].lcc].title });
+    var yAxisValues = stackData.filter(function(a) { return a.values[0].y > 0.05 }).map(function(a){ return a.values[0].y0 + a.values[0].y / 2 });
+    var yAxisValuesText = stackData.filter(function(a) {return a.values[0].y > 0.05 }).map(function(a) { return data.lccCatNames[a.lcc].title });
     var yAxisValuesTextScale = d3.scale.ordinal()
         .domain(yAxisValues)
         .range(yAxisValuesText)
