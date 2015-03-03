@@ -30,7 +30,7 @@ svg {
 }
 .stream-unselected {
     stroke-width: 0px;
-    opacity: 0.5;
+    opacity: 0.8;
 }
 
 .axis > path {
@@ -58,6 +58,11 @@ svg {
     margin-bottom: 0;
 }
 
+
+.help-text
+{
+    font-size: 0.8em;
+}
 
 #control {
     top: 20px;

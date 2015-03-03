@@ -3,6 +3,7 @@
 
 var datasets = ["congress-lib-lcc-year.csv"];
 
+var level = 1;
 
 var options;
 
@@ -72,9 +73,9 @@ function dataLoaded(error, loadedData) {
     d3.selectAll(".box").style("display", "block").transition().duration(1000).style("opacity",1.0);
 
 
-    data.graphData = transformData(data.datasets[options.datasetIndex]);
+    transformData(data.datasets[options.datasetIndex]);
 
-    drawGraph(data.graphData);
+    drawGraph(data.firstLevel);
 }
 function resizeGraphArea() {
     width = window.innerWidth;
@@ -92,8 +93,29 @@ function transformData(rawData) {
         .entries(rawData)
     ;
 
+    data.firstLevel = transformLccCountToStreamData(catGroups);
 
-    return transformLccCountToStreamData(catGroups);
+
+    data.secondLevel = {};
+    data.firstLevel.forEach(function(catGroup) {
+        var lcc = catGroup.lcc;
+        var subCatData = rawData.filter(function(d) { return d.lcc[0] == lcc })
+
+        var subCatGroups = d3.nest()
+            .key(function(d) {
+                if (d.lcc.length < 2 || !isNaN(parseInt(d.lcc[1]))) {
+                    return d.lcc[0];
+                } else {
+                    return d.lcc.substr(0,2);
+                }
+            })
+            .key(function(d) { return d.year })
+            .rollup(function(leaves) { return leaves.length })
+            .entries(subCatData);
+
+            data.secondLevel[lcc] = transformLccCountToStreamData(subCatGroups);
+        ;
+    })
 }
 
 function transformLccCountToStreamData(lccCountData) {
@@ -101,7 +123,12 @@ function transformLccCountToStreamData(lccCountData) {
     var transformedData =
         lccCountData
         .filter(function(d) {
-            var c = d.key.charCodeAt(0);
+            var c = 0;
+            if (d.key.length > 1)
+                c = d.key.charCodeAt(1);
+            else
+                c = d.key.charCodeAt(0);
+
             return c >= startChar && c <= endChar;
         })
         .filter(function(d) { // There are no I, O, W, X and Y classes
@@ -137,11 +164,15 @@ function transformLccCountToStreamData(lccCountData) {
     });
 
 
-    return transformedData;
+    return transformedData
+        .filter(function(sc) { return d3.min(sc.values, function(d) { return d.count }) > 0 && d3.max(sc.values, function(d) { return d.count }) > 0 })
+    ;
 }
 
 
 function drawGraph(graphData) {
+
+    svg.text('');
 
     var color = d3.scale.category20(); //d3.scale.linear().range(["#aad", "#556"]);
 
@@ -192,7 +223,7 @@ function drawGraph(graphData) {
         .style("fill", function(d) { return color(d.lcc); })
     ;
     streams
-        .append("title").text(function(d) { return data.lccCatNames[d.lcc].title; })
+        .append("title").text(function(d) { return getLccTitle(d.lcc) })
 
 
     streams.on('mouseover', function(d) {
@@ -203,6 +234,18 @@ function drawGraph(graphData) {
     // Set the stroke width back to normal when mouse leaves the node.
     streams.on('mouseout', function(d) {
         streams.attr('class', 'stream');
+    });
+
+
+    streams.on('click', function(d) {
+        if(level == 1) {
+            level = 2;
+            drawGraph(data.secondLevel[d.lcc]);
+        } else {
+            level = 1;
+            drawGraph(data.firstLevel);
+        }
+
     });
 
 
@@ -224,7 +267,7 @@ function drawGraph(graphData) {
 
 
     var yAxisValues = stackData.filter(function(a) { return a.values[0].y > 0.05 }).map(function(a){ return a.values[0].y0 + a.values[0].y / 2 });
-    var yAxisValuesText = stackData.filter(function(a) {return a.values[0].y > 0.05 }).map(function(a) { return data.lccCatNames[a.lcc].title });
+    var yAxisValuesText = stackData.filter(function(a) {return a.values[0].y > 0.05 }).map(function(a) { return getLccTitle(a.lcc) });
     var yAxisValuesTextScale = d3.scale.ordinal()
         .domain(yAxisValues)
         .range(yAxisValuesText)
@@ -249,4 +292,14 @@ function drawGraph(graphData) {
 function updateDataset(datasetName) {
     var datasetIndex = datasets.indexOf(datasetName);
     options.datasetIndex = datasetIndex;
+}
+
+function getLccTitle(lcc) {
+    if(lcc.length == 1)
+        return data.lccCatNames[lcc].title;
+    else if(lcc.length == 2)
+        if (data.lccCatNames[lcc[0]]['lccs'][lcc])
+            return data.lccCatNames[lcc[0]]['lccs'][lcc].title;
+        else
+            return lcc;
 }
