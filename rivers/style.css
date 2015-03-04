@@ -64,18 +64,35 @@ svg {
     font-size: 0.8em;
 }
 
+.graph-title {
+    font-size: 1.3em;
+    text-weight: bold;
+}
+
+.loading {
+    top: 50%;
+    left: 50%;
+    margin: 0;
+}
+
+#loading-indicator {
+    margin-left: -20px;
+    margin-top: -20px;
+}
+#loading-text {
+    width: 300px;
+    height: 20px;
+    text-align: center;
+    margin-left: -150px;
+    margin-top: 20px;
+    position: relative;
+}
+
+
 #control {
     top: 20px;
     left: 20px;
     width: 210px;
-}
-
-#loading-indicator {
-    top: 50%;
-    left: 50%;
-    margin: 0;
-    margin-left: -20px;
-    margin-top: -20px;
 }
 
 #control-year {

@@ -3,7 +3,7 @@
 
 var datasets = ["congress-lib-lcc-year.csv"];
 
-var level = 1;
+var currentLcc = '';
 
 var options;
 
@@ -52,6 +52,8 @@ d3.select(window)
 
     resizeGraphArea();
 
+    setProgress('Loading data...');
+
     // load data
     var loadQueue = queue().defer(d3.json, "lc_class.json");
     datasets.forEach(function(t) { loadQueue.defer(d3.csv, t); });
@@ -69,7 +71,7 @@ function dataLoaded(error, loadedData) {
     data.datasets = loadedData.slice(1);
 
     // hide loading indicator and show controls
-    d3.select("#loading-indicator").remove();
+    d3.selectAll(".loading").remove();
     d3.selectAll(".box").style("display", "block").transition().duration(1000).style("opacity",1.0);
 
 
@@ -111,10 +113,11 @@ function transformData(rawData) {
             })
             .key(function(d) { return d.year })
             .rollup(function(leaves) { return leaves.length })
-            .entries(subCatData);
-
-            data.secondLevel[lcc] = transformLccCountToStreamData(subCatGroups);
+            .entries(subCatData)
         ;
+
+        data.secondLevel[lcc] = transformLccCountToStreamData(subCatGroups);
+
     })
 }
 
@@ -213,17 +216,16 @@ function drawGraph(graphData) {
     ;
 
 
-    var streams = svg.selectAll("path")
-        .data(stackData)
-        .enter().append("path")
+    var streams = svg.selectAll(".stream")
+        .data(stackData);
+
+    streams.enter()
+        .append("path")
         .attr('class', 'stream')
-        .attr("d", function(d) {
-            return area(d.values);
-        })
+        .attr("d", function(d) { return area(d.values); })
         .style("fill", function(d) { return color(d.lcc); })
-    ;
-    streams
-        .append("title").text(function(d) { return getLccTitle(d.lcc) })
+        .append("title").text(function(d) { return getLccTitle(d.lcc, true) });
+
 
 
     streams.on('mouseover', function(d) {
@@ -238,11 +240,11 @@ function drawGraph(graphData) {
 
 
     streams.on('click', function(d) {
-        if(level == 1) {
-            level = 2;
+        if(currentLcc == '') {
+            currentLcc = d.lcc;
             drawGraph(data.secondLevel[d.lcc]);
         } else {
-            level = 1;
+            currentLcc = '';
             drawGraph(data.firstLevel);
         }
 
@@ -286,6 +288,19 @@ function drawGraph(graphData) {
     ;
 
 
+    // set graph title
+    var title = svg.append("text")
+        .attr('class', 'graph-title')
+        .attr('text-anchor', 'middle')
+        .attr('x', leftPadding + (width - leftPadding - padding) / 2)
+        .attr('y', 35)
+    ;
+    if(currentLcc == '') {
+        title.text('Top Classes')
+    } else {
+        title.text(getLccTitle(currentLcc, true))
+    }
+
 }
 
 
@@ -294,12 +309,23 @@ function updateDataset(datasetName) {
     options.datasetIndex = datasetIndex;
 }
 
-function getLccTitle(lcc) {
+function getLccTitle(lcc, includeCode) {
+    var str;
+
     if(lcc.length == 1)
-        return data.lccCatNames[lcc].title;
+        str = data.lccCatNames[lcc].title;
     else if(lcc.length == 2)
         if (data.lccCatNames[lcc[0]]['lccs'][lcc])
-            return data.lccCatNames[lcc[0]]['lccs'][lcc].title;
+            str = data.lccCatNames[lcc[0]]['lccs'][lcc].title;
         else
-            return lcc;
+            str = lcc;
+
+    if (includeCode)
+        str += ' - ' + lcc;
+
+    return str;
+}
+
+function setProgress(text) {
+    d3.select("#loading-text").text(text);
 }
