@@ -74,7 +74,6 @@ svg {
     left: 50%;
     margin: 0;
 }
-
 #loading-indicator {
     margin-left: -20px;
     margin-top: -20px;
@@ -111,4 +110,13 @@ svg {
     text-align: center;
     width: 100%;
     display: block;
+}
+
+
+#logos {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+
+    opacity: 0;
 }

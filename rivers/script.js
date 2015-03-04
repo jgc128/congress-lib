@@ -73,7 +73,7 @@ function dataLoaded(error, loadedData) {
     // hide loading indicator and show controls
     d3.selectAll(".loading").remove();
     d3.selectAll(".box").style("display", "block").transition().duration(1000).style("opacity",1.0);
-
+    d3.select("#logos").transition().duration(1000).style("opacity",1.0);
 
     transformData(data.datasets[options.datasetIndex]);
 
