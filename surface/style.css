@@ -35,6 +35,16 @@ svg path{
     margin-bottom: 0;
 }
 
+div.tooltip {
+    position: absolute;
+    text-align: center;
+    padding: 10px;
+    background: #FFFFFF;
+    border: solid 2px #000000;
+    pointer-events: none;
+}
+
+
 #control {
     top: 20px;
     left: 20px;

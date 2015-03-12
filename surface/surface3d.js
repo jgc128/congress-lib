@@ -5,6 +5,7 @@
     var displayWidth=300, displayHeight=300, zoom=1;
     var trans;
 
+    var mouseMoveFunction, mouseOverFunction, mouseOutFunction;
 
     this.setZoom=function(zoomLevel){
       zoom=zoomLevel;
@@ -76,6 +77,18 @@
       if(colorFunction){
         dr.attr("fill",function(d){return colorFunction(d.data)});
       }
+
+      if(mouseMoveFunction) {
+          dr.on('mousemove', function(d) { return mouseMoveFunction(d); });
+      }
+      if(mouseOverFunction) {
+          dr.on('mouseover', function(d) { return mouseOverFunction(d); });
+      }
+      if(mouseOutFunction) {
+          dr.on('mouseout', function(d) { return mouseOutFunction(d); });
+      }
+
+
       trans=false;
     };
     this.renderSurface=renderSurface;
@@ -125,6 +138,19 @@
     this.setWidth=function(width){
       if(width) displayWidth=width;
     };
+
+    this.surfaceMouseMove=function(callback) {
+        mouseMoveFunction = callback;
+        return this;
+    }
+    this.surfaceMouseOver=function(callback) {
+        mouseOverFunction = callback;
+        return this;
+    }
+    this.surfaceMouseOut=function(callback) {
+        mouseOutFunction = callback;
+        return this;
+    }
   };
   d3.selection.prototype.surface3D=function(width,height){
     if(!this.node().__surface__) this.node().__surface__=new Surface(this);
@@ -136,6 +162,11 @@
     surface.setHeight(height);
     surface.setWidth(width);
     this.transition=surface.transition.bind(surface);
+
+    this.surfaceMouseMove=surface.surfaceMouseMove;
+    this.surfaceMouseOver=surface.surfaceMouseOver;
+    this.surfaceMouseOut=surface.surfaceMouseOut;
+
     return this;
   };
 })();
