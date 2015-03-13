@@ -60,7 +60,26 @@ function dataLoaded(error, loadedData) {
     data.lccCatNames = loadedData[0];
     data.lccData = loadedData[1];
 
-    data.surface = computeSurface(data.lccData);
+	// filter data
+    data.filteredData = data.lccData.filter(function (lcc) {
+    	var l1 = lcc[0];
+    	var l2 = lcc[1];
+
+    	var l1_condition = l1 >= "A" && l1 <= "Z";
+    	var l2_condition = (l2 >= "A" && l2 <= "Z") || l2 == "-";
+    	return l1_condition && l2_condition;
+    });
+
+	// get cats count
+    data.catsVal = d3.nest()
+        .key(function (d) { return d[0] })
+        .key(function (d) { return d[1] })
+        .rollup(function (leaves) { return leaves.length })
+		.map(data.filteredData, d3.map);
+
+
+
+    data.surface = computeSurface();
 
     // hide loading indicator and show controls
     d3.select("#loading-indicator").remove();
@@ -79,32 +98,51 @@ function updateYear(year)
     options.year = year;
     d3.select('#year-label').text('Year: ' + year);
 }
-function computeSurface(data)
+function computeSurface()
 {
-    var result = [];
+	var groups = [];
 
+	// get possible cats:
+	var l1cats = d3.set(data.filteredData.map(function (d) { return d[0] })).values().sort();
+	var l2cats = d3.set(data.filteredData.map(function (d) { return d[1] })).values().sort();
 
-    var i, j, k;
-    var startChar = "A".charCodeAt(0);
-    var endChar = "Z".charCodeAt(0);
-    var mapping = function(char) { return char != "-" ? char.charCodeAt(0) - "A".charCodeAt(0) : endChar - startChar + 1; };
+	var i = 0;
+	var l1_idx = 0, l2_idx = 0;
 
-    for(i = 0; i <= endChar - startChar + 1; i++) {
-        result[i] = [];
-        for(j = 0; j <= endChar - startChar + 1; j++) {
-            result[i][j] = { 'lcc_x': String.fromCharCode(startChar + i), 'lcc_y': String.fromCharCode(startChar + j), 'count': 0 };
-        }
-    }
+	l2cats.unshift(' ');
+	l2cats.push(' ');
 
+	for (var l1_idx = 0; l1_idx < l1cats.length; l1_idx++) {
+		var l1 = l1cats[l1_idx];
 
-    var lcc;
-    for(k = 0; k < data.length; k++)
-    {
-        lcc = data[k].toLocaleUpperCase();
-        result[mapping(lcc[0])][mapping(lcc[1])]['count'] -= 1;
-    }
+		groups.push([])
+		groups.push([])
 
-    return result;
+		for (var l2_idx = 0; l2_idx < l2cats.length; l2_idx++) {
+			var l2 = l2cats[l2_idx];
+			var l2_next = l2cats[l2_idx + 1] ? l2cats[l2_idx + 1] : l2;
+
+			var val = data.catsVal.get(l1).get(l2);
+			if (!val)
+				val = 0;
+			var next_val = data.catsVal.get(l1).get(l2_next);
+
+			groups[i].push({ 'lcc_x': l1, 'lcc_y': l2_next, 'count': 0, 'count_next': -next_val });
+			groups[i + 1].push({ 'lcc_x': l1, 'lcc_y': l2_next, 'count': -val, 'count_next': -next_val });
+		}
+
+		i += 2;
+	}
+
+	// add last row (with first and last zero)
+	groups.push([]);
+	var l1 = groups[i - 1][0].lcc_x;
+	l2cats.forEach(function (l2) {
+		groups[i].push({ 'lcc_x': l1, 'lcc_y': l2, 'count': 0, 'count_next': 0 })
+	});
+
+	return groups;
+
 }
 function plotSurface()
 {
@@ -118,18 +156,19 @@ function plotSurface()
             return d.count;
         })
         .surfaceColor(function(d){
-            // var c=d3.hsl(colorScale(d), 0.6, 0.5).rgb();
-            // return "rgb("+parseInt(c.r)+","+parseInt(c.g)+","+parseInt(c.b)+")";
-            return '#e3e3e3';
+            return colorScale(d.lcc_x);
         })
-        .surfaceMouseOver(function(d) {
-            tooltip.transition()
-                .duration(500)
-                .style("opacity", 1);
+        .surfaceMouseOver(function (d) {
+        	var val = d.data.count_next;
+
+			if(val)
+	            tooltip.transition()
+					.duration(250)
+					.style("opacity", 1);
         })
         .surfaceMouseOut(function(d) {
             tooltip.transition()
-                .duration(500)
+                .duration(250)
                 .style("opacity", 0);
         })
         .surfaceMouseMove(function(d) {
@@ -137,7 +176,7 @@ function plotSurface()
             if (d.data.lcc_y != '-')
                 lcc  += d.data.lcc_y;
 
-            var text = getLccTitle(lcc) + ' - ' + (-d.data.count);
+            var text = getLccTitle(lcc) + ' - ' + (-d.data.count_next);
 
             tooltip.text(text)
                   .style("left", (d3.event.pageX - 50) + "px")
