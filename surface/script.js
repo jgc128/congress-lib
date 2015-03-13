@@ -46,8 +46,8 @@ d3.select(window)
     updateYear(options.year);
 
     queue()
-        .defer(d3.json, "lc_class.json")
-        .defer(d3.json, "lcc-data.json")
+        .defer(d3.json, "../data/lcc-titles-nested.json")
+        .defer(d3.json, "../data/lcc-data.json")
         .awaitAll(dataLoaded);
 })
 .on("resize", resizeGraphArea);

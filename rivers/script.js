@@ -1,7 +1,7 @@
 //   http://stackoverflow.com/questions/14127065/d3-streamgraph-layer-fade-function
 
 
-var datasets = ["congress-lib-lcc-year.csv"];
+var datasets = ["../data/congress-lib-lcc-year.csv"];
 
 var currentLcc = '';
 
@@ -55,7 +55,7 @@ d3.select(window)
     setProgress('Loading data...');
 
     // load data
-    var loadQueue = queue().defer(d3.json, "lc_class.json");
+    var loadQueue = queue().defer(d3.json, "../data/lcc-titles-nested.json");
     datasets.forEach(function(t) { loadQueue.defer(d3.csv, t); });
     loadQueue.awaitAll(dataLoaded);
 })
