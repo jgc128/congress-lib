@@ -46,7 +46,11 @@ d3.select(window)
     d3.select('#zoom').on("change", function(){ updateZoom(parseFloat(this.value)) });
 
 
-    d3.select("#reset-camera-position").on("click", function(){ setCameraPosition(0.5, 0.5); updateZoom(1); });
+    d3.select("#reset-camera-position").on("click", function(){ 
+        setCameraPosition(0.5, 0.5); 
+        updateZoom(1);
+        d3.select('#zoom').property("value", 1) 
+    });
     d3.select("#turn-camera-left").on("click", function(){ setCameraPosition(yaw + 0.1, pitch) });
     d3.select("#turn-camera-right").on("click", function(){ setCameraPosition(yaw - 0.1, pitch) });
 
