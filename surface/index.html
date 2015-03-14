@@ -9,11 +9,14 @@
 	<link rel="stylesheet" type="text/css" href="style.css">
 
 	<script>
+		window.has_error = false;
 		window.onerror = function myErrorHandler(errorMsg, url, lineNumber) {
-		    alert("Oops, something went wrong :( Please reload the page!"); 
-		    return false;
-		}		
-
+		    if (!window.has_error) {
+		    	window.has_error = true;
+			    alert("Oops, something went wrong :( Please reload the page!"); 
+		    }
+			return false;
+		}
 	</script>
 	<script src="http://d3js.org/d3.v3.min.js"></script>
 	<script src="http://d3js.org/queue.v1.min.js"></script>
