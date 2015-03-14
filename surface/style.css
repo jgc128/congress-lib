@@ -35,6 +35,13 @@ svg path{
     margin-bottom: 0;
 }
 
+.camera-control {
+    width: 50%;
+    margin: 0;
+    font-size: 1.15em;
+}
+
+
 div.tooltip {
     position: absolute;
     text-align: center;
@@ -42,6 +49,13 @@ div.tooltip {
     background: #FFFFFF;
     border: solid 2px #000000;
     pointer-events: none;
+
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 
@@ -51,13 +65,24 @@ div.tooltip {
     width: 160px;
 }
 
-#loading-indicator {
+.loading {
     top: 50%;
     left: 50%;
     margin: 0;
+}
+#loading-indicator {
     margin-left: -20px;
     margin-top: -20px;
 }
+#loading-text {
+    width: 300px;
+    height: 20px;
+    text-align: center;
+    margin-left: -150px;
+    margin-top: 20px;
+    position: relative;
+}
+
 
 #control-year {
     left: 20%;

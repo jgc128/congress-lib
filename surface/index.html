@@ -15,11 +15,14 @@
 </head>
 <body>
 	<div id="control" class="box">
-
+		<input id="reset-camera-position" type="button" value="Reset camera position" /><br />
+		<hr />
+		<p>
+			<input id="turn-camera-left" type="button" value="←" class="camera-control" /><input id="turn-camera-right" type="button" value="→" class="camera-control" />
+		</p>
 	</div>
 
 	<div id="control-year" class="box">
-		<!-- <label id="year-label" for="year"></label><br/> -->
 		<input id="year" type="range" min="1800" max="2008" step="1" value="1950"/>
 	</div>
 
@@ -27,10 +30,11 @@
 		<label id="year-label" for="year"></label>
 	</div>
 
-	<div id="loading-indicator" class="spinner">
+	<div id="loading-indicator" class="spinner loading">
 		<div class="double-bounce1"></div>
 		<div class="double-bounce2"></div>
 	</div>
+	<div id="loading-text" class="loading"></div>
 
 </body>
 </html>

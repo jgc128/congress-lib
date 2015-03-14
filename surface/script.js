@@ -20,6 +20,12 @@ d3.select(window)
     };
 
 
+    // from http://bl.ocks.org/mbostock/1087001
+    tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
+
+
     svg = d3.select("body").append("svg");
     svg.on("mousedown",function(){
         drag=[d3.mouse(this),yaw,pitch];
@@ -35,19 +41,21 @@ d3.select(window)
         }
     });
 
-    // from http://bl.ocks.org/mbostock/1087001
-    tooltip = d3.select("body").append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
-
     d3.select('#year').on("change", function(){ updateYear(parseInt(this.value)) });
+
+    d3.select("#reset-camera-position").on("click", function(){ setCameraPosition(0.5, 0.5) });
+    d3.select("#turn-camera-left").on("click", function(){ setCameraPosition(yaw + 0.1, pitch) });
+    d3.select("#turn-camera-right").on("click", function(){ setCameraPosition(yaw - 0.1, pitch) });
+
 
     resizeGraphArea();
     updateYear(options.year);
 
+    setProgress('Loading data...');
+
     queue()
         .defer(d3.json, "../data/lcc-titles-nested.json")
-        .defer(d3.json, "../data/lcc-data.json")
+        .defer(d3.csv, "../data/congress-lib-lcc-year.csv")
         .awaitAll(dataLoaded);
 })
 .on("resize", resizeGraphArea);
@@ -58,34 +66,62 @@ d3.select(window)
 function dataLoaded(error, loadedData) {
 
     data.lccCatNames = loadedData[0];
-    data.lccData = loadedData[1];
+    data.lccData = loadedData[1]; // [{lcc: "RX671", year: "1899"}, ...]
 
-	// filter data
-    data.filteredData = data.lccData.filter(function (lcc) {
-    	var l1 = lcc[0];
-    	var l2 = lcc[1];
+	// transform & filter data
+    var transformedData = data.lccData.map(function(lcc_record) {
+        var lcc = lcc_record.lcc[0].toUpperCase();
+        if (lcc_record.lcc.length < 2 || !isNaN(parseInt(lcc_record.lcc[1])))
+            lcc += '-';
+        else
+            lcc += lcc_record.lcc[1].toUpperCase();
+
+        var year = parseInt(lcc_record.year);
+
+        return {'lcc': lcc, 'year': year};
+    });
+
+    data.filteredData = transformedData.filter(function (lcc_record) {
+    	var l1 = lcc_record.lcc[0];
+    	var l2 = lcc_record.lcc[1];
 
     	var l1_condition = l1 >= "A" && l1 <= "Z";
     	var l2_condition = (l2 >= "A" && l2 <= "Z") || l2 == "-";
-    	return l1_condition && l2_condition;
+        var year_condition = lcc_record.year >= 1800 && lcc_record.year <= 2008
+
+    	return l1_condition && l2_condition && year_condition;
     });
 
+    // set possible categories
+    var l1cats = d3.set();
+    var l2cats = d3.set();
+    data.filteredData.forEach(function(lcc_record) {
+        l1cats.add(lcc_record.lcc[0]);
+        l2cats.add(lcc_record.lcc[1]);
+    });
+    data.l1cats = l1cats.values().sort();
+    data.l2cats = l1cats.values().sort();
+    data.l2cats.unshift(' ');
+    data.l2cats.push(' ');
+
+
 	// get cats count
-    data.catsVal = d3.nest()
-        .key(function (d) { return d[0] })
-        .key(function (d) { return d[1] })
+    data.lccStructuredData = d3.nest()
+        .key(function (d) { return d.year })
+        .key(function (d) { return d.lcc[0] })
+        .key(function (d) { return d.lcc[1] })
         .rollup(function (leaves) { return leaves.length })
 		.map(data.filteredData, d3.map);
 
 
 
-    data.surface = computeSurface();
+    data.surfaceData = computeSurface();
 
     // hide loading indicator and show controls
-    d3.select("#loading-indicator").remove();
-    // d3.selectAll(".box").style("display","block").transition().duration(1000).style("opacity",1.0);
+    d3.selectAll(".loading").remove();
+    d3.selectAll(".box").style("display","block").transition().duration(1000).style("opacity",1.0);
 
-    plotSurface();
+    plotSurface(options.year);
 }
 function resizeGraphArea() {
     width = window.innerWidth;
@@ -97,59 +133,77 @@ function updateYear(year)
 {
     options.year = year;
     d3.select('#year-label').text('Year: ' + year);
+
+    if (data.surfaceData)
+        plotSurface(options.year);
 }
 function computeSurface()
 {
-	var groups = [];
 
-	// get possible cats:
-	var l1cats = d3.set(data.filteredData.map(function (d) { return d[0] })).values().sort();
-	var l2cats = d3.set(data.filteredData.map(function (d) { return d[1] })).values().sort();
+    var result = {};
 
-	var i = 0;
-	var l1_idx = 0, l2_idx = 0;
+    data.lccStructuredData.forEach(function(year, lccData) {
+        var groups = [];
 
-	l2cats.unshift(' ');
-	l2cats.push(' ');
+        var i = 0;
+        var l1_idx = 0, l2_idx = 0;
 
-	for (var l1_idx = 0; l1_idx < l1cats.length; l1_idx++) {
-		var l1 = l1cats[l1_idx];
+        for (var l1_idx = 0; l1_idx < data.l1cats.length; l1_idx++) {
+            var l1 = data.l1cats[l1_idx];
 
-		groups.push([])
-		groups.push([])
+            groups.push([])
+            groups.push([])
 
-		for (var l2_idx = 0; l2_idx < l2cats.length; l2_idx++) {
-			var l2 = l2cats[l2_idx];
-			var l2_next = l2cats[l2_idx + 1] ? l2cats[l2_idx + 1] : l2;
+            for (var l2_idx = 0; l2_idx < data.l2cats.length; l2_idx++) {
+                var l2 = data.l2cats[l2_idx];
+                var l2_next = data.l2cats[l2_idx + 1] ? data.l2cats[l2_idx + 1] : l2;
 
-			var val = data.catsVal.get(l1).get(l2);
-			if (!val)
-				val = 0;
-			var next_val = data.catsVal.get(l1).get(l2_next);
+                var val;
+                var next_val;
+                if(data.lccStructuredData.get(year).get(l1))
+                {
+                    val = data.lccStructuredData.get(year).get(l1).get(l2);
+                    next_val = data.lccStructuredData.get(year).get(l1).get(l2_next);
+                }
+                if (!val) val = 0;
+                if (!next_val) next_val = 0;
+                
 
-			groups[i].push({ 'lcc_x': l1, 'lcc_y': l2_next, 'count': 0, 'count_next': -next_val });
-			groups[i + 1].push({ 'lcc_x': l1, 'lcc_y': l2_next, 'count': -val, 'count_next': -next_val });
-		}
+                groups[i].push({ 'lcc_x': l1, 'lcc_y': l2_next, 'count': 0, 'count_next': -next_val });
+                groups[i + 1].push({ 'lcc_x': l1, 'lcc_y': l2_next, 'count': -val, 'count_next': -next_val });
+            }
 
-		i += 2;
-	}
+            i += 2;
+        }
 
-	// add last row (with first and last zero)
-	groups.push([]);
-	var l1 = groups[i - 1][0].lcc_x;
-	l2cats.forEach(function (l2) {
-		groups[i].push({ 'lcc_x': l1, 'lcc_y': l2, 'count': 0, 'count_next': 0 })
-	});
+        // add last row (with first and last zero)
+        groups.push([]);
+        var l1 = groups[i - 1][0].lcc_x;
+        data.l2cats.forEach(function (l2) {
+            groups[i].push({ 'lcc_x': l1, 'lcc_y': l2, 'count': 0, 'count_next': 0 })
+        });
 
-	return groups;
+
+        result[year] = groups;
+    });
+
+
+	return result;
 
 }
-function plotSurface()
+function plotSurface(year)
 {
-    var group = svg.append("g");
+    if(!surface) {
+        var group = svg.append("g");
 
-    surface = group.data([data.surface])
-        .surface3D(width,height);
+        surface = group.data([data.surfaceData[year]])
+            .surface3D(width, height);
+    }
+    else
+        surface.data([data.surfaceData[year]])
+            .surface3D()
+            .transition().duration(500);
+
 
     surface
         .surfaceHeight(function(d){
@@ -200,4 +254,17 @@ function getLccTitle(lcc, includeCode) {
         str += ' - ' + lcc;
 
     return str;
+}
+
+function setCameraPosition(newYaw, newPitch) {
+    if(surface) {
+        yaw = newYaw;
+        pitch = newPitch;
+
+        surface.turntable(yaw,pitch);
+    }
+}
+
+function setProgress(text) {
+    d3.select("#loading-text").text(text);
 }
