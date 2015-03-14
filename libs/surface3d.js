@@ -70,13 +70,7 @@
       d0.sort(function(a, b){return b.depth-a.depth});
       var dr=node.selectAll('path').data(d0);
       dr.enter().append("path");
-      if(trans){
-        dr=dr.transition().delay(trans.delay()).duration(trans.duration());
-      }
-      dr.attr("d",function(d){return d.path;});
-      if(colorFunction){
-        dr.attr("fill",function(d){return colorFunction(d.data)});
-      }
+      dr.exit().remove();
 
       if(mouseMoveFunction) {
           dr.on('mousemove', function(d) { return mouseMoveFunction(d); });
@@ -86,6 +80,16 @@
       }
       if(mouseOutFunction) {
           dr.on('mouseout', function(d) { return mouseOutFunction(d); });
+      }
+
+
+      if(trans){
+        dr=dr.transition().delay(trans.delay()).duration(trans.duration());
+      }
+
+      dr.attr("d",function(d){return d.path;});
+      if(colorFunction){
+        dr.attr("fill",function(d){return colorFunction(d.data)});
       }
 
 
