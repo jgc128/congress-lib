@@ -5,7 +5,7 @@ var data = {};
 
 var width, height;
 
-var yaw=0.5,pitch=0.5, width=700, height=400, drag=false;
+var yaw=0.5, pitch=0.5, width=700, height=400, drag=false;
 
 var tooltip;
 
@@ -17,6 +17,7 @@ d3.select(window)
 
     options = {
         'year': parseInt(d3.select("#year").property("value")),
+        'zoom': parseFloat(d3.select("#zoom").property("value")),
     };
 
 
@@ -42,6 +43,8 @@ d3.select(window)
     });
 
     d3.select('#year').on("change", function(){ updateYear(parseInt(this.value)) });
+    d3.select('#zoom').on("change", function(){ updateZoom(parseFloat(this.value)) });
+
 
     d3.select("#reset-camera-position").on("click", function(){ setCameraPosition(0.5, 0.5) });
     d3.select("#turn-camera-left").on("click", function(){ setCameraPosition(yaw + 0.1, pitch) });
@@ -50,6 +53,7 @@ d3.select(window)
 
     resizeGraphArea();
     updateYear(options.year);
+    updateZoom(options.zoom);
 
     setProgress('Loading data...');
 
@@ -67,6 +71,8 @@ function dataLoaded(error, loadedData) {
 
     data.lccCatNames = loadedData[0];
     data.lccData = loadedData[1]; // [{lcc: "RX671", year: "1899"}, ...]
+
+    var excludedCats = ['I', 'O', 'W', 'X', 'Y'];
 
     // transform & filter data
     setTimeout(function(){
@@ -91,7 +97,9 @@ function dataLoaded(error, loadedData) {
                 var l2_condition = (l2 >= "A" && l2 <= "Z") || l2 == "-";
                 var year_condition = lcc_record.year >= 1800 && lcc_record.year <= 2008
 
-                return l1_condition && l2_condition && year_condition;
+                var excluded_condition = excludedCats.indexOf(l1) == -1;
+
+                return l1_condition && l2_condition && year_condition && excluded_condition;
             });
 
                 // set possible categories
@@ -107,6 +115,11 @@ function dataLoaded(error, loadedData) {
                     data.l2cats.unshift(' ');
                     data.l2cats.push(' ');
 
+                    // set legend
+                    var legend1Data = data.l1cats.slice(0, data.l1cats.length/2);
+                    var legend2Data = data.l1cats.slice(data.l1cats.length/2);
+                    createLegend(d3.select("#legend-1"), legend1Data);
+                    createLegend(d3.select("#legend-2"), legend2Data);
 
                     // get cats count
                     setTimeout(function(){
@@ -132,12 +145,11 @@ function dataLoaded(error, loadedData) {
                     }, 10);
                     setProgress('Grouping data...');                    
             }, 10);
-            setProgress('Calculate categories...');
+            setProgress('Calculating categories...');
         }, 10);
-        setProgress('Filter data...');
+        setProgress('Filtering data...');
     }, 10);
-    setProgress('Transform data...');
-
+    setProgress('Transforming data...');
 }
 function resizeGraphArea() {
     width = window.innerWidth;
@@ -153,6 +165,17 @@ function updateYear(year)
     if (data.surfaceData)
         plotSurface(options.year);
 }
+function updateZoom(zoom)
+{
+    options.zoom = zoom;
+    d3.select('#zoom-label').text('Zoom: ' + zoom);
+
+    if (surface)
+        surface.zoom(options.zoom);
+}
+
+
+
 function computeSurface()
 {
 
@@ -229,12 +252,9 @@ function plotSurface(year)
             return colorScale(d.lcc_x);
         })
         .surfaceMouseOver(function (d) {
-        	var val = d.data.count_next;
-
-			if(val)
-	            tooltip.transition()
-					.duration(250)
-					.style("opacity", 1);
+            tooltip.transition()
+				.duration(250)
+				.style("opacity", 1);
         })
         .surfaceMouseOut(function(d) {
             tooltip.transition()
@@ -246,7 +266,7 @@ function plotSurface(year)
             if (d.data.lcc_y != '-')
                 lcc  += d.data.lcc_y;
 
-            var text = getLccTitle(lcc) + ' - ' + (-d.data.count_next);
+            var text = getLccTitle(lcc);
 
             tooltip.text(text)
                   .style("left", (d3.event.pageX - 50) + "px")
@@ -283,4 +303,22 @@ function setCameraPosition(newYaw, newPitch) {
 
 function setProgress(text) {
     d3.select("#loading-text").text(text);
+}
+
+function createLegend(item, legendData) {
+    var legendItem = item
+        .append('ul')
+        .selectAll('li')
+        .data(legendData)
+        .enter()
+        .append('li')
+    ;
+    legendItem
+        .append('div')
+        .style('background-color', function(d) { return colorScale(d) })
+    ;
+    legendItem
+        .append('span')
+        .text(function(d) { return getLccTitle(d) })
+    ;
 }
