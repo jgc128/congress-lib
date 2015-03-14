@@ -99,7 +99,7 @@ function dataLoaded(error, loadedData) {
 
                 var l1_condition = l1 >= "A" && l1 <= "Z";
                 var l2_condition = (l2 >= "A" && l2 <= "Z") || l2 == "-";
-                var year_condition = lcc_record.year >= 1800 && lcc_record.year <= 2008
+                var year_condition = lcc_record.year >= 1800 && lcc_record.year <= 1950
 
                 var excluded_condition = excludedCats.indexOf(l1) == -1;
 
