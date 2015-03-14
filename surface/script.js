@@ -68,60 +68,76 @@ function dataLoaded(error, loadedData) {
     data.lccCatNames = loadedData[0];
     data.lccData = loadedData[1]; // [{lcc: "RX671", year: "1899"}, ...]
 
-	// transform & filter data
-    var transformedData = data.lccData.map(function(lcc_record) {
-        var lcc = lcc_record.lcc[0].toUpperCase();
-        if (lcc_record.lcc.length < 2 || !isNaN(parseInt(lcc_record.lcc[1])))
-            lcc += '-';
-        else
-            lcc += lcc_record.lcc[1].toUpperCase();
+    // transform & filter data
+    setTimeout(function(){
+        var transformedData = data.lccData.map(function(lcc_record) {
+            var lcc = lcc_record.lcc[0].toUpperCase();
+            if (lcc_record.lcc.length < 2 || !isNaN(parseInt(lcc_record.lcc[1])))
+                lcc += '-';
+            else
+                lcc += lcc_record.lcc[1].toUpperCase();
 
-        var year = parseInt(lcc_record.year);
+            var year = parseInt(lcc_record.year);
 
-        return {'lcc': lcc, 'year': year};
-    });
+            return {'lcc': lcc, 'year': year};
+        });
 
-    data.filteredData = transformedData.filter(function (lcc_record) {
-    	var l1 = lcc_record.lcc[0];
-    	var l2 = lcc_record.lcc[1];
+        setTimeout(function(){
+            data.filteredData = transformedData.filter(function (lcc_record) {
+                var l1 = lcc_record.lcc[0];
+                var l2 = lcc_record.lcc[1];
 
-    	var l1_condition = l1 >= "A" && l1 <= "Z";
-    	var l2_condition = (l2 >= "A" && l2 <= "Z") || l2 == "-";
-        var year_condition = lcc_record.year >= 1800 && lcc_record.year <= 2008
+                var l1_condition = l1 >= "A" && l1 <= "Z";
+                var l2_condition = (l2 >= "A" && l2 <= "Z") || l2 == "-";
+                var year_condition = lcc_record.year >= 1800 && lcc_record.year <= 2008
 
-    	return l1_condition && l2_condition && year_condition;
-    });
+                return l1_condition && l2_condition && year_condition;
+            });
 
-    // set possible categories
-    var l1cats = d3.set();
-    var l2cats = d3.set();
-    data.filteredData.forEach(function(lcc_record) {
-        l1cats.add(lcc_record.lcc[0]);
-        l2cats.add(lcc_record.lcc[1]);
-    });
-    data.l1cats = l1cats.values().sort();
-    data.l2cats = l1cats.values().sort();
-    data.l2cats.unshift(' ');
-    data.l2cats.push(' ');
-
-
-	// get cats count
-    data.lccStructuredData = d3.nest()
-        .key(function (d) { return d.year })
-        .key(function (d) { return d.lcc[0] })
-        .key(function (d) { return d.lcc[1] })
-        .rollup(function (leaves) { return leaves.length })
-		.map(data.filteredData, d3.map);
+                // set possible categories
+                setTimeout(function(){
+                    var l1cats = d3.set();
+                    var l2cats = d3.set();
+                    data.filteredData.forEach(function(lcc_record) {
+                        l1cats.add(lcc_record.lcc[0]);
+                        l2cats.add(lcc_record.lcc[1]);
+                    });
+                    data.l1cats = l1cats.values().sort();
+                    data.l2cats = l1cats.values().sort();
+                    data.l2cats.unshift(' ');
+                    data.l2cats.push(' ');
 
 
+                    // get cats count
+                    setTimeout(function(){
+                        data.lccStructuredData = d3.nest()
+                            .key(function (d) { return d.year })
+                            .key(function (d) { return d.lcc[0] })
+                            .key(function (d) { return d.lcc[1] })
+                            .rollup(function (leaves) { return leaves.length })
+                            .map(data.filteredData, d3.map);
 
-    data.surfaceData = computeSurface();
 
-    // hide loading indicator and show controls
-    d3.selectAll(".loading").remove();
-    d3.selectAll(".box").style("display","block").transition().duration(1000).style("opacity",1.0);
+                            setTimeout(function(){
+                                data.surfaceData = computeSurface();
 
-    plotSurface(options.year);
+                                // hide loading indicator and show controls
+                                d3.selectAll(".loading").remove();
+                                d3.selectAll(".box").style("display","block").transition().duration(1000).style("opacity",1.0);
+
+                                plotSurface(options.year);
+
+                            }, 10);
+                            setProgress('Creating surface...');
+                    }, 10);
+                    setProgress('Grouping data...');                    
+            }, 10);
+            setProgress('Calculate categories...');
+        }, 10);
+        setProgress('Filter data...');
+    }, 10);
+    setProgress('Transform data...');
+
 }
 function resizeGraphArea() {
     width = window.innerWidth;
