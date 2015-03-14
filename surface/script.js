@@ -9,6 +9,8 @@ var yaw=0.5, pitch=0.5, width=700, height=400, drag=false;
 
 var tooltip;
 
+var animationInterval;
+
 // var colorScale = d3.scale.pow().exponent(0.1).domain([0,1000]).range([200,100]);//d3.scale.linear().domain([0,100]).range([100,0]);
 var colorScale = d3.scale.category20();
 
@@ -42,7 +44,10 @@ d3.select(window)
         }
     });
 
-    d3.select('#year').on("change", function(){ updateYear(parseInt(this.value)) });
+    d3.select('#year').on("change", function(){ 
+        stopAnimation();      
+        updateYear(parseInt(this.value)) 
+    });
     d3.select('#zoom').on("change", function(){ updateZoom(parseFloat(this.value)) });
 
 
@@ -53,6 +58,14 @@ d3.select(window)
     });
     d3.select("#turn-camera-left").on("click", function(){ setCameraPosition(yaw + 0.1, pitch) });
     d3.select("#turn-camera-right").on("click", function(){ setCameraPosition(yaw - 0.1, pitch) });
+
+    d3.select("#play").on("click", function(){ 
+        if(!animationInterval) {
+            startAnimation();
+        } else {
+            stopAnimation();
+        }
+    });
 
 
     resizeGraphArea();
@@ -245,7 +258,8 @@ function plotSurface(year)
     else
         surface.data([data.surfaceData[year]])
             .surface3D()
-            .transition().duration(500);
+            // .transition().duration(500)
+        ;
 
 
     surface
@@ -287,11 +301,13 @@ function getLccTitle(lcc, includeCode) {
     else if(lcc.length == 2)
         if (data.lccCatNames[lcc[0]] && data.lccCatNames[lcc[0]]['lccs'][lcc])
             str = data.lccCatNames[lcc[0]]['lccs'][lcc].title;
-        else
+        else {
             str = lcc;
+            includeCode = false;
+        }
 
     if (includeCode)
-        str += ' - ' + lcc;
+        str = lcc + ' - ' + str;
 
     return str;
 }
@@ -323,6 +339,28 @@ function createLegend(item, legendData) {
     ;
     legendItem
         .append('span')
-        .text(function(d) { return getLccTitle(d) })
+        .text(function(d) { return getLccTitle(d, true) })
     ;
 }
+
+
+function stopAnimation(){
+    clearInterval(animationInterval);
+    animationInterval = undefined;
+
+    d3.select("#play").property("value", "Play animation");
+}
+function startAnimation() {
+     d3.select("#play").property("value", "Stop animation");
+
+    animationInterval = setInterval(function(){
+        options.year += 1;
+        d3.select('#year').property("value", options.year);
+        updateYear(options.year);
+        
+        if (options.year == 1950){
+            stopAnimation();
+        }
+    }, 300);
+}
+
