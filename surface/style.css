@@ -1,14 +1,14 @@
 html, body, input, div, p, span {
-    margin: 0;
-    padding: 0;
+	margin: 0;
+	padding: 0;
 }
 html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
 }
 body {
-    font-family: 'Gentium Book Basic', serif;
+	font-family: 'Gentium Book Basic', serif;
 }
 
 svg path{
@@ -18,140 +18,143 @@ svg path{
 }
 
 .box {
-    position: absolute;
-    background-color: #FFFFFF;
-    box-shadow: 0 0 10px 0 rgba(50, 50, 50, 0.75);
-    padding: 10px;
+	position: absolute;
+	background-color: #FFFFFF;
+	box-shadow: 0 0 10px 0 rgba(50, 50, 50, 0.75);
+	padding: 10px;
 
-    opacity: 0;
-    display: none;
+	opacity: 0;
+	display: none;
 }
 .box > input {
-    width: 100%;
-    margin: 0;
-    margin-bottom: 10px;
+	width: 100%;
+	margin: 0;
+	margin-bottom: 10px;
 }
+	.box > input[type=checkbox] {
+		width: auto;
+	}
 .box > input:last-child {
-    margin-bottom: 0;
+	margin-bottom: 0;
 }
 
 .camera-control {
-    width: 50%;
-    margin: 0;
-    font-size: 1.15em;
+	width: 50%;
+	margin: 0;
+	font-size: 1.15em;
 }
 
 
 div.tooltip {
-    position: absolute;
-    text-align: center;
-    padding: 10px;
-    background: #FFFFFF;
-    border: solid 2px #000000;
-    pointer-events: none;
+	position: absolute;
+	text-align: center;
+	padding: 10px;
+	background: #FFFFFF;
+	border: solid 2px #000000;
+	pointer-events: none;
 
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 
 
 #control {
-    top: 20px;
-    left: 20px;
-    width: 160px;
+	top: 20px;
+	left: 20px;
+	width: 200px;
 }
 
 .loading {
-    top: 50%;
-    left: 50%;
-    margin: 0;
+	top: 50%;
+	left: 50%;
+	margin: 0;
 }
 #loading-indicator {
-    margin-left: -20px;
-    margin-top: -20px;
+	margin-left: -20px;
+	margin-top: -20px;
 }
 #loading-text {
-    width: 300px;
-    height: 20px;
-    text-align: center;
-    margin-left: -150px;
-    margin-top: 20px;
-    position: relative;
+	width: 300px;
+	height: 20px;
+	text-align: center;
+	margin-left: -150px;
+	margin-top: 20px;
+	position: relative;
 }
 
 
 #control-year {
-    left: 260px;
-    right: 260px;
-    bottom: 20px;
+	left: 260px;
+	right: 260px;
+	bottom: 20px;
 }
 
 #year-indicator {
-    top: 20px;
-    left: 50%;
-    width: 100px;
-    margin-left: -50px;
+	top: 20px;
+	left: 50%;
+	width: 100px;
+	margin-left: -50px;
 }
 #year-indicator > label {
-    text-align: center;
-    width: 100%;
-    display: block;
+	text-align: center;
+	width: 100%;
+	display: block;
 }
 
 
 
 .legend {
-    max-width: 200px;
+	max-width: 200px;
 }
 
 .legend > ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
 }
 .legend > ul > li {
-    white-space: nowrap;
-    position: relative;
-    margin-bottom: 3px;
+	white-space: nowrap;
+	position: relative;
+	margin-bottom: 3px;
 }
 .legend > ul > li:last-child {
-    margin-bottom: 0;
+	margin-bottom: 0;
 }
 .legend > ul > li > div {
-    width: 10px;
-    height: 100%;
-    position: absolute;
-    display: inline-block;
+	width: 10px;
+	height: 100%;
+	position: absolute;
+	display: inline-block;
 }
 .legend > ul > li > span {
-    display: inline-block;
-    position: relative;
-    left: 20px;
-    white-space: normal;
+	display: inline-block;
+	position: relative;
+	left: 20px;
+	white-space: normal;
 }
 #legend-1 {
-    left: 20px;
-    bottom: 20px;
+	left: 20px;
+	bottom: 20px;
 }
 #legend-2 {
-    right: 20px;
-    bottom: 20px;
+	right: 20px;
+	bottom: 20px;
 }
 
 
 #description-text {
-    right: 20px;
-    top: 20px;
+	right: 20px;
+	top: 20px;
 
-    max-width: 200px;
+	max-width: 200px;
 }
 #description-text > p {
-    margin-bottom: 10px;
+	margin-bottom: 10px;
 }
 #description-text > p:last-child {
-    margin-bottom: 0;
+	margin-bottom: 0;
 }

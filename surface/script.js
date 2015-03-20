@@ -20,6 +20,7 @@ d3.select(window)
 	options = {
 		'year': parseInt(d3.select("#year").property("value")),
 		'zoom': parseFloat(d3.select("#zoom").property("value")),
+		'cumulative': false,
 	};
 
 
@@ -48,7 +49,8 @@ d3.select(window)
 		stopAnimation();      
 		updateYear(parseInt(this.value)) 
 	});
-	d3.select('#zoom').on("change", function(){ updateZoom(parseFloat(this.value)) });
+	d3.select('#zoom').on("change", function () { updateZoom(parseFloat(this.value)) });
+	d3.select('#cumulative').on("change", function () { updateCumulative(this.checked) });
 
 
 	d3.select("#reset-camera-position").on("click", function(){ 
@@ -71,6 +73,7 @@ d3.select(window)
 	resizeGraphArea();
 	updateYear(options.year);
 	updateZoom(options.zoom);
+	updateCumulative(options.cumulative);
 
 	setProgress('Loading data...');
 
@@ -108,6 +111,7 @@ function dataLoaded(error, loadedData) {
 
 						setTimeout(function(){
 							computeSurface();
+							computeCumulativeSurface();
 
 							// hide loading indicator and show controls
 							d3.selectAll(".loading").remove();
@@ -253,16 +257,68 @@ function computeSurface()
 
 	data.surfaceData = result;
 }
+function computeCumulativeSurface() {
+	data.surfaceDataCum = JSON.parse(JSON.stringify(data.surfaceData)); // Copy original data
+
+
+	var years = data.lccStructuredData.keys().sort();
+
+	// create cumulative data
+	var i_end = data.surfaceData[years[0]].length;
+	var j_end = data.surfaceData[years[0]][0].length;
+	var y_end = years.length;
+
+	// set data to zero
+	for (var y = 0; y < y_end; y++)
+		for (var i = 0; i < i_end; i++)
+			for (var j = 0; j < j_end; j++) {
+				data.surfaceDataCum[years[y]][i][j]['count'] = 0;
+				data.surfaceDataCum[years[y]][i][j]['count_next'] = 0;
+			}
+
+	// set data and fina a maximum (actually, minimum :) )
+	var max_count = 0;
+	for (var y = 1; y < y_end; y++) {
+		for (var i = 0; i < i_end; i++) {
+			for (var j = 0; j < j_end; j++) {
+				data.surfaceDataCum[years[y]][i][j]['count'] =
+					data.surfaceDataCum[years[y - 1]][i][j]['count'] + data.surfaceData[years[y]][i][j]['count'];
+				data.surfaceDataCum[years[y]][i][j]['count_next'] =
+					data.surfaceDataCum[years[y - 1]][i][j]['count_next'] + data.surfaceData[years[y]][i][j]['count_next'];
+
+				if (max_count > data.surfaceDataCum[years[y]][i][j]['count'])
+					max_count = data.surfaceDataCum[years[y]][i][j]['count'];
+
+			}
+		}
+	}
+
+	// scale data
+	var cumDataScale = d3.scale.linear().domain([0, max_count]).range([0, -750]);
+	for (var y = 0; y < y_end; y++)
+		for (var i = 0; i < i_end; i++)
+			for (var j = 0; j < j_end; j++) {
+				data.surfaceDataCum[years[y]][i][j]['count'] = cumDataScale(data.surfaceDataCum[years[y]][i][j]['count']);
+				data.surfaceDataCum[years[y]][i][j]['count_next'] = cumDataScale(data.surfaceDataCum[years[y]][i][j]['countcount_next']);
+			}
+}
+
 function plotSurface(year)
 {
+	var dataToPlot;
+	if (options.cumulative)
+		dataToPlot = [data.surfaceDataCum[year]];
+	else
+		dataToPlot = [data.surfaceData[year]];
+
 	if(!surface) {
 		var group = svg.append("g");
 
-		surface = group.data([data.surfaceData[year]])
+		surface = group.data(dataToPlot)
 			.surface3D(width, height);
 	}
 	else
-		surface.data([data.surfaceData[year]])
+		surface.data(dataToPlot)
 			.surface3D()
 			// .transition().duration(500)
 		;
@@ -321,7 +377,13 @@ function updateZoom(zoom) {
 	if (surface)
 		surface.zoom(options.zoom);
 }
+function updateCumulative(isCumulative) {
+	options.cumulative = isCumulative;
 
+	if (surface)
+		plotSurface(options.year);
+
+}
 
 function getLccTitle(lcc, includeCode) {
 	var str;
