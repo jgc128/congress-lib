@@ -1,19 +1,19 @@
 html, body, input, div, p, span {
-    margin: 0;
-    padding: 0;
+	margin: 0;
+	padding: 0;
 }
 html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
 }
 body {
-    font-family: 'Gentium Book Basic', serif;
+	font-family: 'Gentium Book Basic', serif;
 }
 
 
 .node-g {
-    z-index: 999;
+	z-index: 999;
 }
 
 .node {
@@ -31,56 +31,70 @@ body {
 }
 
 .title {
-    fill: #000000;
-    text-shadow: 2px 2px 0px rgba(255, 255, 255, 1);
+	fill: #000000;
+	text-shadow: 2px 2px 0px rgba(255, 255, 255, 1);
 }
 
 .box {
-    position: absolute;
-    background-color: #FFFFFF;
-    box-shadow: 0 0 10px 0 rgba(50, 50, 50, 0.75);
-    padding: 10px;
+	position: absolute;
+	background-color: #FFFFFF;
+	box-shadow: 0 0 10px 0 rgba(50, 50, 50, 0.75);
+	padding: 10px;
 
-    opacity: 0;
-    display: none;
+	opacity: 0;
+	display: none;
 }
 .box > input, .box > select {
-    width: 100%;
-    margin: 0;
-    margin-bottom: 10px;
+	width: 100%;
+	margin: 0;
+	margin-bottom: 10px;
 }
 .box > input:last-child, .box > select:last-child {
-    margin-bottom: 0;
+	margin-bottom: 0;
 }
 
 #control {
-    top: 20px;
-    left: 20px;
-    width: 210px;
+	top: 20px;
+	left: 20px;
+	width: 210px;
 }
 
 #loading-indicator {
-    top: 50%;
-    left: 50%;
-    margin: 0;
-    margin-left: -20px;
-    margin-top: -20px;
+	top: 50%;
+	left: 50%;
+	margin: 0;
+	margin-left: -20px;
+	margin-top: -20px;
 }
 
 #control-year {
-    left: 20%;
-    width: 60%;
-    bottom: 20px;
+	left: 20%;
+	width: 60%;
+	bottom: 20px;
 }
 
 #year-indicator {
-    top: 20px;
-    left: 50%;
-    width: 100px;
-    margin-left: -50px;
+	top: 20px;
+	left: 50%;
+	width: 100px;
+	margin-left: -50px;
 }
 #year-indicator > label {
-    text-align: center;
-    width: 100%;
-    display: block;
+	text-align: center;
+	width: 100%;
+	display: block;
+}
+
+
+#description-text {
+	right: 20px;
+	top: 20px;
+
+	max-width: 200px;
+}
+#description-text > p {
+	margin-bottom: 10px;
+}
+#description-text > p:last-child {
+	margin-bottom: 0;
 }
