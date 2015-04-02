@@ -59,12 +59,22 @@ body {
 	width: 210px;
 }
 
-#loading-indicator {
+.loading {
 	top: 50%;
 	left: 50%;
 	margin: 0;
+}
+#loading-indicator {
 	margin-left: -20px;
 	margin-top: -20px;
+}
+#loading-text {
+	width: 300px;
+	height: 20px;
+	text-align: center;
+	margin-left: -150px;
+	margin-top: 20px;
+	position: relative;
 }
 
 #control-year {
